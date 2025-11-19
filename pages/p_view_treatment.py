@@ -26,8 +26,11 @@ def main():
 
     st.title("Treatment Plan")
 
-    if not treatment:
-        st.error("Treatment plan not found.")
+    # Only display a plan if the doctor has saved non-empty content.
+    if not treatment or not (treatment.plan_text or "").strip():
+        st.info("No treatment plan has been created by the doctor for this visit yet.")
+        if st.button("Back"):
+            st.switch_page("pages/p_view_history.py")
         return
 
     # Fetch Visit to display ICD stored on Visit (source of truth)

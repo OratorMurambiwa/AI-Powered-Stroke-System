@@ -2,6 +2,7 @@ import streamlit as st
 from core.session_manager import require_role
 from core.helpers import render_technician_sidebar
 from services.visit_service import get_visit_by_id, update_visit
+from services.tpa_service import run_tpa_eligibility
 from services.patient_service import get_patient_by_id
 from services.user_service import get_doctor_list
 
@@ -106,8 +107,35 @@ st.divider()
 # -------------------------
 
 st.subheader("tPA Eligibility")
+# If tPA hasn't been evaluated yet, run the eligibility checks now so
+# the technician (and subsequently the doctor) can see the result even
+# when no scan was uploaded.
 if visit.tpa_eligible is None:
-    st.warning("tPA eligibility has not been evaluated yet.")
+    try:
+        tpa_result = run_tpa_eligibility(visit.id)
+    except Exception:
+        tpa_result = {"eligible": None, "reason": "No Scan available."}
+
+    # Persist only the reason; do not persist a definitive eligible flag when
+    # the result is indeterminate (eligible is None). This prevents storing
+    # a false negative when imaging is missing.
+    try:
+        if tpa_result.get("eligible") is None:
+            update_visit(visit.id, tpa_reason=tpa_result.get("reason"))
+        else:
+            update_visit(visit.id, tpa_eligible=bool(tpa_result.get("eligible")), tpa_reason=tpa_result.get("reason"))
+    except Exception:
+        pass
+
+    if tpa_result.get("eligible") is None:
+        status = "Indeterminate"
+    elif tpa_result.get("eligible"):
+        status = "Eligible"
+    else:
+        status = "NOT Eligible"
+
+    st.write(f"Status: {status}")
+    st.write(f"Reason: {tpa_result.get('reason', '')}")
 else:
     status = "Eligible" if visit.tpa_eligible else "NOT Eligible"
     st.write(f"Status: {status}")

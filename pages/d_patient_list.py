@@ -1,6 +1,6 @@
 import streamlit as st
 from core.session_manager import require_role
-from core.helpers import render_doctor_sidebar
+from core.helpers import render_doctor_sidebar, visit_code_display
 from services.user_service import get_current_user
 from core.database import get_db
 from models.patient import Patient
@@ -72,7 +72,7 @@ def main():
                 .first()
             )
             if recent:
-                st.caption(f"Latest Visit: {recent.visit_id} • Status: {recent.status}")
+                st.caption(f"Latest Visit: {visit_code_display(recent.visit_id)} • Status: {recent.status}")
 
             col1, col2 = st.columns([1,1])
             with col1:
@@ -81,7 +81,7 @@ def main():
                     st.switch_page("pages/d_patient_history.py")
             with col2:
                 if recent:
-                    if st.button(f"Open Latest Case ({recent.visit_id})", key=f"open_{recent.id}"):
+                    if st.button(f"Open Latest Case ({visit_code_display(recent.visit_id)})", key=f"open_{recent.id}"):
                         st.session_state["open_visit_id"] = recent.id
                         st.switch_page("pages/d_view_case.py")
         st.markdown("---")

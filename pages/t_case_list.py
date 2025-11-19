@@ -2,7 +2,7 @@ import streamlit as st
 from sqlalchemy.orm import Session
 
 from core.session_manager import require_role
-from core.helpers import render_technician_sidebar
+from core.helpers import render_technician_sidebar, visit_code_display
 from core.database import get_db
 from models.visit import Visit
 from models.patient import Patient
@@ -87,7 +87,7 @@ def main():
                     st.session_state["selected_patient"] = p.patient_id
                     st.switch_page("pages/t_patient_history.py")
                 st.caption(f"Patient ID: {p.patient_id}")
-                st.write(f"Visit ID: {v.visit_id}")
+                st.write(f"Visit ID: {visit_code_display(v.visit_id)}")
                 ts = getattr(v, "timestamp", None)
                 st.write(f"Date/Time: {ts if ts else '—'}")
             with right:

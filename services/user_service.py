@@ -1,37 +1,42 @@
 from core.database import get_db_session, get_db_context
 from models import User
 from models.patient import Patient
-from core.helpers import hash_password
+from core.helpers import hash_password  # legacy sha256
+from core.auth import verify_password, hash_password as bcrypt_hash
 import streamlit as st
 
 
 def authenticate_user(username: str, password: str, role: str):
-    """
-    Authenticates a user by username, password, and required role.
-    Uses SHA-256 password hashing.
+    """Authenticate user by username, password, and required role.
+
+    Supports legacy SHA-256 hashes (stored using core.helpers.hash_password) and new
+    bcrypt hashes (stored using core.auth.hash_password). New accounts will use bcrypt.
     """
     with get_db_context() as db:
         user = db.query(User).filter(User.username == username).first()
-
         if not user:
             return None
 
-        # Compare hashed passwords
-        if user.password_hash != hash_password(password):
+        stored = user.password_hash or ""
+        # Attempt bcrypt verify first; if it fails, fall back to legacy sha256 compare.
+        password_ok = False
+        try:
+            if verify_password(password, stored):
+                password_ok = True
+        except Exception:
+            pass
+        if not password_ok:
+            # legacy path
+            if stored == hash_password(password):
+                password_ok = True
+        if not password_ok:
             return None
 
-        # Check correct role (support doctor/physician synonyms)
         required = (role or "").strip().lower()
         user_role = (user.role or "").strip().lower()
-
-        if required in {"doctor", "physician"}:
-            allowed = {"doctor", "physician"}
-        else:
-            allowed = {required}
-
+        allowed = {"doctor", "physician"} if required in {"doctor", "physician"} else {required}
         if user_role not in allowed:
             return None
-
         return user
 
 
@@ -46,21 +51,9 @@ def ensure_default_users():
 
         # Create demo users
         users = [
-            User(
-                username="tech1",
-                role="technician",
-                password_hash=hash_password("pass123")
-            ),
-            User(
-                username="doc1",
-                role="physician",
-                password_hash=hash_password("pass123")
-            ),
-            User(
-                username="patient1",
-                role="patient",
-                password_hash=hash_password("pass123")
-            ),
+            User(username="tech1", role="technician", password_hash=bcrypt_hash("pass123")),
+            User(username="doc1", role="physician", password_hash=bcrypt_hash("pass123")),
+            User(username="patient1", role="patient", password_hash=bcrypt_hash("pass123")),
         ]
 
         db.add_all(users)
@@ -113,7 +106,7 @@ def create_user(role: str, username: str, password: str, *, patient_code: str | 
             if db.query(User).filter(User.username == code).first():
                 raise ValueError("A user with this patient code already exists.")
 
-            user = User(username=code, role="patient", password_hash=hash_password(password), full_name=full_name)
+            user = User(username=code, role="patient", password_hash=bcrypt_hash(password), full_name=full_name)
             db.add(user)
             db.commit()
             db.refresh(user)
@@ -124,7 +117,7 @@ def create_user(role: str, username: str, password: str, *, patient_code: str | 
         if db.query(User).filter(User.username == username).first():
             raise ValueError("Username already exists.")
 
-        user = User(username=username, role=role, password_hash=hash_password(password), full_name=full_name)
+        user = User(username=username, role=role, password_hash=bcrypt_hash(password), full_name=full_name)
         db.add(user)
         db.commit()
         db.refresh(user)

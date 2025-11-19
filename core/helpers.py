@@ -120,3 +120,21 @@ def render_patient_sidebar():
         if st.button("Logout", use_container_width=True):
             from core.session_manager import logout
             logout()
+
+
+# -----------------------------
+# Visit display helpers
+# -----------------------------
+def visit_code_display(visit_id: str | None) -> str:
+    """Return a compact display code for a visit.
+
+    If stored as "<PatientCode>-V###", returns "V###". Falls back to the raw value.
+    """
+    if not visit_id:
+        return "—"
+    try:
+        if "-" in visit_id:
+            return visit_id.split("-")[-1]
+    except Exception:
+        pass
+    return visit_id or "—"

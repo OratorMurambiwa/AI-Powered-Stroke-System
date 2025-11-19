@@ -1,6 +1,6 @@
 import streamlit as st
 from core.session_manager import require_role
-from core.helpers import render_doctor_sidebar
+from core.helpers import render_doctor_sidebar, visit_code_display
 from services.user_service import get_current_user
 from core.database import get_db
 from sqlalchemy.orm import Session
@@ -28,7 +28,7 @@ def main():
     st.title(f"Cases — {_status_label(status) if status != 'all' else 'All'}")
 
     # Optional quick filter
-    q = st.text_input("Search (name, patient ID, or visit code)", placeholder="e.g., Jane or P003 or V00012").strip().lower()
+    q = st.text_input("Search (name, patient ID, or visit code)", placeholder="e.g., Jane or P003 or V001").strip().lower()
 
     # Load visits for this doctor by status
     base_q = (
@@ -66,7 +66,7 @@ def main():
                     st.session_state["selected_patient"] = p.patient_id
                     st.switch_page("pages/d_patient_history.py")
                 st.caption(f"{p.patient_id} • Age {p.age} • {p.gender}")
-                st.write(f"Visit: {v.visit_id}")
+                st.write(f"Visit: {visit_code_display(v.visit_id)}")
                 ts = getattr(v, 'timestamp', None)
                 st.write(f"Date/Time: {ts if ts else '—'}")
                 st.write(f"Status: {v.status}")

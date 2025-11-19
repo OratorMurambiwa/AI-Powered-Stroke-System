@@ -11,16 +11,16 @@ torchvision==0.17.0+cpu
 torchaudio==2.2.0+cpu
 --extra-index-url https://download.pytorch.org/whl/cpu
 
-opencv-python
+opencv-python==4.9.0.80
 pillow
 
 # API + Utilities
-openai
+openai>=1.40.0
 requests
 tiktoken
 
 # General utilities
-numpy
+numpy==1.26.4
 pandas
 streamlit-searchbox
 streamlit-drawable-canvas==0.9.3

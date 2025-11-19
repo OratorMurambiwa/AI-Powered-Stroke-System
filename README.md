@@ -13,13 +13,15 @@
 8. Running the App
 9. ML Model & Inference
 10. Image Annotation
-11. Treatment Plan Generation
-12. ICD-10 Code Search
-13. Session & Navigation
-14. Security & Privacy Notes
-15. Troubleshooting
-16. Roadmap / Future Ideas
-17. License / Disclaimer
+11. Treatment Plan (Inline)
+12. ICD-10 Code (Inline)
+13. tPA Eligibility Logic
+14. Time Handling (UTC)
+15. Session & Navigation
+16. Security & Privacy Notes
+17. Troubleshooting
+18. Roadmap / Future Ideas
+19. License / Disclaimer
 
 ---
 ## 1. Overview
@@ -42,10 +44,10 @@ Technologies:
 * Vitals + NIHSS entry; shows prior visit values if current missing.
 * Scan upload & annotated overlay saving (composited image with markings).
 * Doctor case review with onset time & elapsed duration display.
-* AI-assisted treatment plan generation (exactly 5 concise numbered points).
-* Editable treatment plan; subsequent display in case view & patient portal.
-* ICD-10 code search & selection.
-* tPA eligibility flag & reason display (basic fields).
+* AI-assisted treatment plan generation (exactly 5 concise numbered points) — now inline on the case view.
+* Editable treatment plan; subsequent display in case view & patient portal (stored per-visit and patient).
+* ICD-10 code search & selection — now inline on the case view.
+* tPA eligibility flag & reason display, including “Indeterminate” when no imaging and automatic NOT eligible when bleeding/hemorrhage predicted.
 * Role-based sidebars and session-based navigation.
 
 ---
@@ -155,35 +157,49 @@ Access via printed Local URL (default: `http://localhost:8501`).
 * Weight file: `ml/MedStroke.pt` (placeholder) loaded by `model_loader.py`.
 * `services/scan_service.py` calls model for classification probabilities.
 * Predictions saved onto Visit: `prediction_label`, `prediction_confidence`.
-* (Current doctor view has prediction section removed per latest adjustments; patient view still shows placeholders.)
+* Doctor view shows a compact prediction confidence breakdown when available.
 
 Performance caveats: CPU inference only; large model weights may slow initial load.
 
 ---
 ## 10. Image Annotation
 * Implemented with `streamlit-drawable-canvas`.
-* Canvas loads the actual scan as background.
+* Canvas loads the actual scan as background for editing.
+* Doctor view: the composed annotated image preview below the canvas has been removed; edits happen only within the canvas.
 * On save:
-	1. Drawn overlay (RGBA) merged with base scan using alpha compositing.
-	2. Saved PNG: `data/uploads/annotations/visit_<id>.png`.
-	3. JSON drawing data saved for re-loading / future edits.
-* Patients see annotated version first; can expand to view original.
+	1. Drawn overlay (RGBA) is merged with base scan and written to a composed PNG.
+	2. The JSON drawing data is also saved so you can reload and keep editing.
+* Patient view may display the composed annotation where applicable.
 
 ---
-## 11. Treatment Plan Generation
-* Doctor clicks “Generate Treatment Plan”.
-* Prompt engineered to produce exactly 5 concise, plain-text, numbered recommendations.
-* Sanitization removes markdown/intended formatting, enforces numbering.
-* Doctor can edit before saving; stored in `Treatment.plan_text`.
-* Patient portal shows saved plan if available.
+## 11. Treatment Plan (Inline)
+* On the doctor case view (`pages/d_view_case.py`):
+	- Click “Generate Treatment Plan” to draft a 5-point plan.
+	- Edit in the inline editor and click “Save Treatment Plan”.
+	- Saved plans immediately display under the Treatment Plan section.
+* Storage rules:
+	- Plans are saved to `Treatment` and tied strictly to the current `visit_id`, plus `patient_code` and `patient_name` for safety.
+	- Plans from other visits or patients will not display.
+* OpenAI SDK: the app uses the v1 client. Ensure `OPENAI_API_KEY` is set and `openai>=1.40.0` is installed.
 
 OpenAI usage is optional; absence of a key simply blocks generation.
 
 ---
-## 12. ICD-10 Code Search
-* Uses NLM Clinical Tables API (`icd10cm`).
-* Selected code stored on the Visit (`icd_code`).
-* Patient & doctor views display code plus resolved description when available.
+## 12. ICD-10 Code (Inline)
+* Inline search on the doctor case view powered by NLM Clinical Tables API.
+* Save writes the selected code to `Visit.icd_code`.
+* You can switch between view and edit modes without leaving the page.
+
+## 13. tPA Eligibility Logic
+* Time window: NOT eligible if onset-to-now > 4.5 hours.
+* Imaging rules:
+	- No scan → result is Indeterminate (neither true nor false) with a clear reason.
+	- If model predicts hemorrhage/bleeding (or related terms), tPA is NOT eligible.
+* Vitals and labs (BP, INR, glucose) can disqualify as implemented.
+
+## 14. Time Handling (UTC)
+* All timestamps and `onset_time` values are stored and displayed as timezone-aware UTC.
+* Naive datetime inputs are coerced to UTC to avoid runtime errors.
 
 ---
 ## 13. Session & Navigation
@@ -207,30 +223,45 @@ This is a prototype. Not production-ready:
 * Do NOT deploy in a clinical environment without audit, access control, logging, and compliance review (HIPAA/GDPR).
 
 ---
-## 15. Troubleshooting
+## 17. Troubleshooting
 | Issue | Possible Cause | Fix |
 |-------|----------------|-----|
-| OpenAI errors | Missing / invalid API key | Set `OPENAI_API_KEY` in `.env`. |
+| OpenAI errors | Missing / invalid API key or wrong SDK | Set `OPENAI_API_KEY` in `.env` and ensure `openai>=1.40.0`. |
 | Model load slow | Large Torch CPU wheels | Preload or reduce model size. |
-| Annotation not visible to patient | Old saved PNG was overlay only | Re-save annotation (new logic composites). |
+| Annotation preview appears | Old cached UI | Refresh; doctor view no longer shows preview below the canvas. |
 | App restarts on save | Normal Streamlit rerun | Use session state persistence keys. |
 | Import error `bcrypt` | Package not installed | `pip install bcrypt` (already in requirements). |
 | Torch install fails | Wrong Python / platform | Use matching wheel versions or remove Torch if not needed. |
 
+### Migration: Treatment Patient Fields
+We introduced `Treatment.patient_code` and `Treatment.patient_name` to enforce per-visit/per-patient display. Run the migration script once after upgrading:
+
+```powershell
+D:/Users/DELL/Desktop/Stroke_System/venv/Scripts/python.exe scripts/migrate_treatment_patient_fields.py
+```
+
+### NumPy / Torch Compatibility
+If you see NumPy/PyTorch ABI errors, the app pins NumPy to 1.26.x for compatibility with the current Torch build. Re-install dependencies with:
+
+```powershell
+D:/Users/DELL/Desktop/Stroke_System/venv/Scripts/python.exe -m pip install -r requirements.txt
+```
+
 Logs: Consider adding explicit logging handlers for production or debugging.
 
 
-## 17. License / Disclaimer
+## 19. License / Disclaimer
 This repository is provided “as is” for educational and prototyping purposes only. Not medical advice. Always follow institutional protocols and consult qualified clinicians.
 
 ---
 ## Quick Start Recap
-```bash
+```powershell
 python -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-echo OPENAI_API_KEY=sk-xxxx > .env # optional
-streamlit run app.py
+venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+Set-Content -Path .env -Value "OPENAI_API_KEY=sk-xxxx"  # optional
+python -m streamlit run app.py
 ```
 
 Happy prototyping!

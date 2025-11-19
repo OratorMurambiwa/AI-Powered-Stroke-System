@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 from models.visit import Visit
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from core.database import get_db_context
+from core.time_utils import now_utc
 
 
 """
@@ -9,7 +10,7 @@ Full tPA Eligibility Service
 ---------------------------------
 Returns:
 {
-    "eligible": True/False,
+    "eligible": True/False/None,  # None => indeterminate (e.g., imaging required)
     "reason": "Explanation..."
 }
 """
@@ -21,7 +22,10 @@ Returns:
 def _hours_since_onset(onset_time: datetime):
     if not onset_time:
         return None
-    now = datetime.now()
+    now = now_utc()
+    # If onset_time is naive, assume it was recorded in UTC and make it aware.
+    if getattr(onset_time, 'tzinfo', None) is None:
+        onset_time = onset_time.replace(tzinfo=timezone.utc)
     return (now - onset_time).total_seconds() / 3600
 
 
@@ -52,14 +56,23 @@ def evaluate_tpa_eligibility(db: Session, visit_id: int):
     # ---------------------------------------
     # 2. IMAGING AVAILABILITY + SCREEN FOR HEMORRHAGE
     # ---------------------------------------
+    # If imaging is not available we cannot make a definitive tPA decision.
+    # Return an indeterminate result (eligible=None) so the UI can show
+    # that imaging is required rather than falsely marking the patient
+    # as ineligible.
     if not getattr(visit, 'scan_path', None):
-        reasons.append("Imaging not available/processed — cannot confirm ischemic stroke.")
-        return {"eligible": False, "reason": "\n".join(reasons)}
+        # Use a clear, clinician-friendly reason when no scan was uploaded
+        reasons.append("No scan available to confirm type of stroke.")
+        return {"eligible": None, "reason": "\n".join(reasons)}
 
-    # If ML model provided a classification
+    # If ML model provided a classification, screen for hemorrhage/bleeding
     if getattr(visit, 'prediction_label', None):
-        if "hemorrhage" in visit.prediction_label.lower():
-            reasons.append("Model indicates possible intracranial hemorrhage — tPA contraindicated.")
+        label = visit.prediction_label.lower()
+        hemorrhage_terms = [
+            "hemorrhage", "bleeding", "intracerebral", "ich", "intraparenchymal", "subarachnoid"
+        ]
+        if any(term in label for term in hemorrhage_terms):
+            reasons.append("Imaging indicates intracranial hemorrhage/bleeding — tPA contraindicated.")
             return {"eligible": False, "reason": "\n".join(reasons)}
 
     # ---------------------------------------

@@ -3,7 +3,7 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
 from sqlalchemy import Text
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from core.time_utils import now_utc
 
 from core.database import Base
 
@@ -17,9 +17,9 @@ class Visit(Base):
 
     # Stroke event metadata
     visit_id = Column(String, unique=True, index=True, nullable=False)  # example: V00102
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime(timezone=True), default=now_utc)
     # Time of stroke onset (if recorded) — used by tPA eligibility checks
-    onset_time = Column(DateTime, nullable=True)
+    onset_time = Column(DateTime(timezone=True), nullable=True)
 
     # Workflow status and assignment
     status = Column(String, default="in_progress")

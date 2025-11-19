@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from models.patient import Patient
 from models.visit import Visit
-from datetime import datetime
+from core.time_utils import now_utc
 from core.database import get_db_context
 
 
@@ -83,7 +83,7 @@ def create_visit(db: Session, patient_id: str):
 
     visit = Visit(
         patient_id=patient.id,
-        created_at=datetime.utcnow()
+        timestamp=now_utc()
     )
 
     db.add(visit)

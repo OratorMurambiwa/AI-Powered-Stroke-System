@@ -8,8 +8,14 @@ from sqlalchemy.orm import Session
 from models.visit import Visit
 from services.tpa_service import evaluate_tpa_eligibility
 from core.database import get_db_context
-from ml.model_loader import get_model
-from ml.predict import predict_scan
+from core.annotation_utils import delete_all_visit_annotations
+_ML_AVAILABLE = True
+try:
+    # Try lightweight import to detect if ML stack is available.
+    from ml.predict import predict_scan  # type: ignore
+except Exception:
+    predict_scan = None  # type: ignore
+    _ML_AVAILABLE = False
 
 
 # Base folder where scans are stored
@@ -72,15 +78,22 @@ def run_model_on_scan(scan_path: str) -> Tuple[str, float, list]:
         label: predicted class label as a string
         confidence: prediction confidence as a float between 0 and 1
     """
-    # Load model (we assume model_loader caches this so it is not reloaded every time)
-    # Delegate actual prediction logic to ml.predict: it accepts the path
-    # (model loader is handled internally) and returns a dict.
-    result = predict_scan(scan_path)
-    label = result.get("label")
-    confidence = result.get("confidence")
-    probabilities = result.get("probabilities", [])
+    # If ML stack is unavailable (e.g., missing NumPy/PyTorch), return
+    # empty prediction values rather than raising — the UI can still show
+    # the uploaded scan and allow manual review.
+    if not _ML_AVAILABLE or predict_scan is None:
+        return None, None, []
 
-    return label, confidence, probabilities
+    try:
+        result = predict_scan(scan_path)
+        label = result.get("label")
+        confidence = result.get("confidence")
+        probabilities = result.get("probabilities", [])
+        return label, confidence, probabilities
+    except Exception:
+        # On any runtime failure inside the model/predict code, do not
+        # raise — return empty prediction so the caller can continue.
+        return None, None, []
 
 
 def process_scan_for_visit(db: Session, visit_id: int, uploaded_file) -> Dict:
@@ -131,16 +144,11 @@ def process_scan_for_visit(db: Session, visit_id: int, uploaded_file) -> Dict:
     # 1) Save scan to disk
     scan_path = save_uploaded_scan(uploaded_file)
 
-    # 2) Run ML model
-    try:
-        prediction_label, prediction_conf, probabilities = run_model_on_scan(scan_path)
-    except Exception as e:
-        # We still keep the scan_path, but do not set ML fields
-        # so the doctor can see the raw scan even if model fails.
-        db.rollback()
-        raise RuntimeError(f"Model prediction failed: {e}")
+    # 2) Run ML model (may return None values if the ML stack is unavailable)
+    prediction_label, prediction_conf, probabilities = run_model_on_scan(scan_path)
 
     # 3) Update visit with scan and ML outputs
+    old_scan_path = getattr(visit, 'scan_path', None)
     visit.scan_path = scan_path
     # Map to Visit model fields
     visit.prediction_label = prediction_label
@@ -149,11 +157,21 @@ def process_scan_for_visit(db: Session, visit_id: int, uploaded_file) -> Dict:
     db.commit()
     db.refresh(visit)
 
+    # Delete old annotations if scan path changed
+    if old_scan_path and old_scan_path != scan_path:
+        delete_all_visit_annotations(visit)
+
     # 4) Evaluate tPA eligibility based on updated visit
     tpa_result = evaluate_tpa_eligibility(db, visit.id)
 
-    visit.tpa_eligible = tpa_result.get("eligible", False)
-    visit.tpa_reason = tpa_result.get("reason", "")
+    # Only persist a definitive eligible flag when evaluate_tpa_eligibility
+    # returns True/False. If it returns None (indeterminate due to missing
+    # imaging), persist only the reason and leave tpa_eligible unset.
+    if tpa_result.get("eligible") is None:
+        visit.tpa_reason = tpa_result.get("reason", "")
+    else:
+        visit.tpa_eligible = tpa_result.get("eligible", False)
+        visit.tpa_reason = tpa_result.get("reason", "")
     # Optional: mark status to show this visit is processed
     if not visit.status:
         visit.status = "analysis_completed"

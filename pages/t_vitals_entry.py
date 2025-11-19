@@ -1,5 +1,6 @@
 import streamlit as st
-from datetime import datetime, timedelta
+from datetime import timedelta, timezone
+from core.time_utils import now_utc
 
 from core.session_manager import require_role
 from core.helpers import render_technician_sidebar
@@ -49,7 +50,10 @@ def _default_duration_from_existing(onset):
     if not onset:
         return 0, 0
     try:
-        now = datetime.now()
+        now = now_utc()
+        # Coerce naive datetimes to UTC for safety
+        if getattr(onset, 'tzinfo', None) is None:
+            onset = onset.replace(tzinfo=timezone.utc)
         if onset > now:
             return 0, 0
         delta = now - onset
@@ -83,7 +87,7 @@ if st.button("Save Vitals", type="primary"):
     try:
         total_minutes = int(hours_since_onset) * 60 + int(minutes_since_onset)
         if total_minutes > 0:
-            onset_dt = datetime.now() - timedelta(minutes=total_minutes)
+            onset_dt = now_utc() - timedelta(minutes=total_minutes)
     except Exception:
         onset_dt = None
 

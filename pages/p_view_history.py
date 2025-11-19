@@ -47,14 +47,21 @@ def main():
     st.subheader("Scan & Model Prediction")
 
     if visit.scan_path:
-        base_dir = db_core.BASE_DIR
-        ann_path = os.path.join(base_dir, "data", "uploads", "annotations", f"visit_{visit.id}.png")
-        if os.path.exists(ann_path):
-            st.image(ann_path, caption="Annotated Scan", width=350)
-            with st.expander("View original scan"):
-                st.image(visit.scan_path, caption="Original Scan", width=350)
-        else:
-            st.image(visit.scan_path, caption="Uploaded Scan", width=350)
+        try:
+            from core.annotation_utils import get_annotation_paths
+            ann_img_path, _ = get_annotation_paths(visit)
+        except Exception:
+            base_dir = db_core.BASE_DIR
+            ann_img_path = os.path.join(base_dir, "data", "uploads", "annotations", f"visit_{visit.id}.png")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            if os.path.exists(ann_img_path):
+                st.image(ann_img_path, caption="Annotated Scan", use_column_width=True)
+            else:
+                st.info("No annotations available for this scan.")
+        with col2:
+            st.image(visit.scan_path, caption="Original Uploaded Scan", use_column_width=True)
 
     pred = getattr(visit, "prediction_label", None) or "—"
     conf = getattr(visit, "prediction_confidence", None)

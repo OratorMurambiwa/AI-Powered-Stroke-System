@@ -21,12 +21,12 @@ def create_visit(patient_id: int | str | None, db: Session = None):
     else:
         patient_pk = patient_id
 
-    # Generate unique visit identifier (V00001 style) based on last visit id
-    latest = db.query(Visit).order_by(Visit.id.desc()).first()
-    if not latest:
-        visit_code = "V00001"
-    else:
-        visit_code = f"V{latest.id + 1:05d}"
+    # Generate per-patient sequential visit code: <PatientCode>-V### (e.g., P003-V001)
+    # Display will show only the V### portion.
+    patient_obj = db.query(Patient).filter(Patient.id == patient_pk).first()
+    existing_count = db.query(Visit).filter(Visit.patient_id == patient_pk).count()
+    seq = existing_count + 1
+    visit_code = f"{patient_obj.patient_id}-V{seq:03d}"
 
     visit = Visit(patient_id=patient_pk, visit_id=visit_code, status="in_progress")
     db.add(visit)

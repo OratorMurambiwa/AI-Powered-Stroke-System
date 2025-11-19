@@ -1,6 +1,6 @@
 import streamlit as st
 from core.session_manager import require_role
-from core.helpers import render_doctor_sidebar
+from core.helpers import render_doctor_sidebar, visit_code_display
 from services.patient_service import get_patient_by_id
 from services.visit_service import get_visits_for_patient
 
@@ -43,7 +43,7 @@ def main():
         with st.container():
             left, right = st.columns([3, 2])
             with left:
-                st.write(f"Visit ID: {v.visit_id}")
+                st.write(f"Visit ID: {visit_code_display(v.visit_id)}")
                 ts = getattr(v, 'timestamp', None)
                 st.write(f"Date/Time: {ts if ts else '—'}")
                 st.write(f"Status: {getattr(v, 'status', '—')}")
