@@ -4,24 +4,24 @@
 
 
 ## 📚 Table of Contents  
-1. [Overview](#-overview)  
-2. [Core Features](#-core-features)  
-3. [Roles & User Flows](#-roles--user-flows)  
-4. [Architecture & Directory Layout](#-architecture--directory-layout)  
-5. [Data Model Summary](#-data-model-summary-high-level)  
-6. [Installation & Setup](#-installation--setup)  
-7. [Environment Configuration (`.env`)](#-environment-configuration-env)  
-8. [Running the App](#-running-the-app)  
-9. [ML Model & Inference](#-ml-model--inference)  
-10. [Image Annotation](#-image-annotation)  
-11. [Treatment Plan (Inline)](#-treatment-plan-inline)  
-12. [ICD-10 Code (Inline)](#-icd-10-code-inline)  
-13. [tPA Eligibility Logic](#-tpa-eligibility-logic)  
-14. [Time Handling (UTC)](#-time-handling-utc)  
-15. [Session & Navigation](#-session--navigation)  
-16. [Security & Privacy Notes](#-security--privacy-notes)  
-17. [Troubleshooting](#-troubleshooting)   
-18. [License / Disclaimer](#-license--disclaimer)  
+1. [Overview](#1--overview)  
+2. [Core Features](#2-️-core-features)  
+3. [Roles & User Flows](#3--roles--user-flows)  
+4. [Architecture & Directory Layout](#4-️-architecture--directory-layout)  
+5. [Data Model Summary](#5--data-model-summary-high-level)  
+6. [Installation & Setup](#6-️-installation--setup)  
+7. [Environment Configuration (.env)](#7--environment-configuration-env)  
+8. [Running the App](#8-️-running-the-app)  
+9. [ML Model & Inference](#9--ml-model--inference)  
+10. [Image Annotation](#10--image-annotation)  
+11. [Treatment Plan (Inline)](#11--treatment-plan-inline)  
+12. [ICD-10 Code (Inline)](#12--icd-10-code-inline)  
+13. [tPA Eligibility Logic](#13--tpa-eligibility-logic)  
+14. [Time Handling (UTC)](#14--time-handling-utc)  
+15. [Session & Navigation](#15--session--navigation)  
+16. [Security & Privacy Notes](#16--security--privacy-notes)  
+17. [Troubleshooting](#17-️️-troubleshooting)  
+18. [License / Disclaimer](#18--license--disclaimer)
 
 
 ---
@@ -49,7 +49,7 @@ Technologies:
 * AI-assisted treatment plan generation (exactly 5 concise numbered points)  view.
 * Editable treatment plan; subsequent display in case view & patient portal (stored per-visit and patient).
 * ICD-10 code search & selection 
-* tPA eligibility flag & reason display, including “Indeterminate” when no imaging and automatic NOT eligible when bleeding/hemorrhage predicted.
+* tPA eligibility flag & reason display, including "Indeterminate" when no imaging and automatic NOT eligible when bleeding/hemorrhage predicted.
 * Role-based sidebars and session-based navigation.
 
 ---
@@ -176,8 +176,8 @@ Notes: CPU inference only; large model weights may slow initial load.
 ---
 ## 11. 📝 Treatment Plan (Inline)
 * On the doctor case view (`pages/d_view_case.py`):
-	- Click “Generate Treatment Plan” to draft a 5-point plan.
-	- Edit in the inline editor and click “Save Treatment Plan”.
+	- Click "Generate Treatment Plan" to draft a 5-point plan.
+	- Edit in the inline editor and click "Save Treatment Plan".
 	- Saved plans immediately display under the Treatment Plan section.
 * Storage rules:
 	- Plans are saved to `Treatment` and tied strictly to the current `visit_id`, plus `patient_code` and `patient_name` for safety.
@@ -192,6 +192,7 @@ OpenAI usage is optional; absence of a key simply blocks generation.
 * Save writes the selected code to `Visit.icd_code`.
 * You can switch between view and edit modes without leaving the page.
 
+---
 ## 13. 💉 tPA Eligibility Logic
 * Time window: NOT eligible if onset-to-now > 4.5 hours.
 * Imaging rules:
@@ -199,6 +200,7 @@ OpenAI usage is optional; absence of a key simply blocks generation.
 	- If model predicts hemorrhage/bleeding (or related terms), tPA is NOT eligible.
 * Vitals and labs (BP, INR, glucose) can disqualify as implemented.
 
+---
 ## 14. 🌍 Time Handling (UTC)
 * All timestamps and `onset_time` values are stored and displayed as timezone-aware UTC.
 * Naive datetime inputs are coerced to UTC to avoid runtime errors.
@@ -209,7 +211,7 @@ OpenAI usage is optional; absence of a key simply blocks generation.
 * `st.session_state` keys:
 	* `open_visit_id` – current doctor case.
 	* `selected_patient` (technician flows).
-	* `patient_visit_id` – patient’s selected visit.
+	* `patient_visit_id` – patient's selected visit.
 	* Various annotation flags: `show_ann_<id>`, etc.
 
 Sidebars:
@@ -251,9 +253,9 @@ D:/Users/DELL/Desktop/Stroke_System/venv/Scripts/python.exe -m pip install -r re
 
 Logs: Consider adding explicit logging handlers for production or debugging.
 
-
+---
 ## 18. 📄 License / Disclaimer
-This repository is provided “as is” for educational and prototyping purposes only. Not medical advice. Always follow institutional protocols and consult qualified clinicians.
+This repository is provided "as is" for educational and prototyping purposes only. Not medical advice. Always follow institutional protocols and consult qualified clinicians.
 
 ---
 ## Quick Start Recap
