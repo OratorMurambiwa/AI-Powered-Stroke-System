@@ -5,7 +5,7 @@ sqlalchemy>=2.0
 pydantic==1.10.13
 
 # ML + Inference (CPU-only PyTorch)
-ultralytics
+ultralytics==8.3.0
 torch==2.2.0+cpu
 torchvision==0.17.0+cpu
 torchaudio==2.2.0+cpu
