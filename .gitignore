@@ -43,3 +43,9 @@ data/
 *.sqlite3
 .env.*
 !.env.example
+
+# Unified portal dependencies/builds and private synthetic demo artifacts
+portal/node_modules/
+portal/dist/
+portal/coverage/
+.portal-demo/

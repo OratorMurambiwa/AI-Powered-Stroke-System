@@ -23,6 +23,9 @@ app.use(express.urlencoded({ extended: true }));
 // Global rate limiting
 app.use(apiLimiter);
 
+// Private portal responses must not be stored by browsers or proxies.
+app.use('/api', (_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
+
 // Routes
 app.use('/api/auth', authRoutes); // Milestone-1 URL compatibility, same authority.
 app.use('/api/v1/identity/auth', authRoutes);
