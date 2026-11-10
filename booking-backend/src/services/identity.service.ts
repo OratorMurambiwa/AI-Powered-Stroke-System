@@ -8,7 +8,7 @@ import { IdentityAudit, IdentitySession, IdentityControl, IdentityChallenge, Ide
 import { canonicalRole, Role, staffRoles } from '../identity/roles';
 import { HttpError, text } from '../utils/http';
 
-export interface Principal { id: string; email: string; role: Role; sessionId: string; authVersion: number; expiresAt: number }
+export interface Principal { id: string; email: string; role: Role; sessionId: string; authVersion: number; roleVersion: number; expiresAt: number }
 export function password(value: unknown): string {
   if (typeof value !== 'string' || value.length < 12 || Buffer.byteLength(value) > 72) throw new HttpError(400, 'Password must contain at least 12 characters and at most 72 UTF-8 bytes');
   return value;
@@ -64,7 +64,7 @@ export async function authenticateToken(raw: string): Promise<Principal> {
       record.role !== role || record.expiresAt.getTime() !== claims.exp! * 1000 || record.issuedAt.getTime() !== claims.iat! * 1000) {
     throw new HttpError(401, 'Session is no longer active');
   }
-  return { id: user.id, email: user.email, role, sessionId: record.id, authVersion: record.authVersion, expiresAt: claims.exp! };
+  return { id: user.id, email: user.email, role, sessionId: record.id, authVersion: record.authVersion, roleVersion: user.clinicalRoleVersion ?? 0, expiresAt: claims.exp! };
 }
 export async function invalidate(user: IUser, session: ClientSession): Promise<void> {
   await User.updateOne({ _id: user._id }, { $inc: { authVersion: 1 } }, { session });
@@ -138,7 +138,7 @@ export async function changeStaff(principal: Principal, id: string, input: { rea
     if (!target || canonicalRole(target.role) === 'patient') throw new HttpError(404, 'Staff identity not found');
     if (target.state === 'revoked') throw new HttpError(409, 'Staff identity is already revoked');
     const from = canonicalRole(target.role);
-    await User.updateOne({ _id: id }, { $set: revoke ? { state: 'revoked' } : { role } }, { session });
+    await User.updateOne({ _id: id }, { $set: revoke ? { state: 'revoked' } : { role }, $inc: { clinicalRoleVersion: 1 } }, { session });
     await invalidate(target, session);
     await audit(session, revoke ? 'STAFF_REVOKED' : 'STAFF_ROLE_CHANGED', principal.id, id, reason, from, revoke ? undefined : role);
     return { id, role: revoke ? from : role, state: revoke ? 'revoked' : target.state };

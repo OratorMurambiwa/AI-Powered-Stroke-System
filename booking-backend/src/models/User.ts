@@ -8,6 +8,7 @@ export interface IUser extends Document {
   role: 'patient' | 'doctor' | 'physician' | 'technician' | 'admin';
   state: 'active' | 'invited' | 'revoked';
   authVersion: number;
+  clinicalRoleVersion: number;
   authWriteVersion: number;
   recoveryRequestedAt?: Date;
   createdAt: Date;
@@ -36,6 +37,7 @@ const userSchema = new Schema<IUser>(
       trim: true,
     },
     state: { type: String, enum: ['active', 'invited', 'revoked'], default: 'active' },
+    clinicalRoleVersion: { type: Number, default: 0 },
     authVersion: { type: Number, default: 0 },
     authWriteVersion: { type: Number, default: 0, select: false },
     recoveryRequestedAt: { type: Date, select: false },

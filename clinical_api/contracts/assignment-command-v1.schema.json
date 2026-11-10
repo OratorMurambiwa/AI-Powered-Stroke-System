@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:assignment-command:v1",
+  "title": "Explicit encounter assignment command",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "mappingId",
+    "encounterId"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "mappingId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "encounterId": {
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}

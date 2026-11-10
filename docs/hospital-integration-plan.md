@@ -43,13 +43,19 @@ Session-backed JWTs expire in at most 15 minutes; logout, password changes/recov
 
 See [identity v1 contracts and procedures](identity-v1.md) and [milestone 2A results](hospital-milestone-2a-verification.md). No existing users/data were migrated or automatically matched by name/email. Future approved clinical linkage, per-record clinical authorization and the unified frontend remain unimplemented.
 
+## Milestone 2B — explicit synthetic clinical identity linkage implemented
+
+The isolated `clinical_api/` package validates live booking sessions through a separate versioned clinical-introspection contract. Local operator approvals bind exact authority subjects to source-scoped stable clinical UUIDs, with no name/email/code matching. Doctor/technician access requires an explicit encounter assignment tied to the active mapping ID and current role generation. Admin status grants no clinical access. Duplicate/conflicting mappings, source/record identity drift, stale role generations and unavailable stores fail closed. Link/assignment changes and approvals are audited transactionally.
+
+Only fresh marked synthetic clinical sources and a separate mapping SQLite store are supported in this milestone. Original Streamlit/SQLite records, credentials, scans and weights remain untouched and unintegrated. New read-only paths expose minimal owned/assigned records, not scans, predictions or treatment generation. See [clinical linkage contracts/procedures](clinical-linkage-v1.md) and [2B verification](hospital-milestone-2b-verification.md).
+
 ## Subsequent integration milestones
 
-### 2B. Clinical identity linkage and production identity hardening
+### 2C. Approved clinical adoption and production identity hardening
 
 Milestone 2A selected the booking authority and implemented local audited staff/session/recovery controls. Before production, review hospital staff verification, MFA, distributed throttling, transport authentication, key custody and approved delivery. Canonical doctor/physician normalization and a least-privilege technician role are implemented for booking. Review all Streamlit direct-page authorization and patient ownership checks before exposing clinical records. Existing known demo accounts must be disabled/reset explicitly by an authorized operator, not by silently editing preserved databases. Patient code alone is not sufficient identity verification for clinical access.
 
-Define a new stable patient identifier and a versioned, explicitly approved mapping between Mongo ObjectIds, SQL user/patient integers, `P###` codes and clinician usernames. Never auto-link by name/email or auto-import current patient data. Rehearse migrations only against generated synthetic fixtures; preserve originals and require a separate migration decision.
+Milestone 2B now uses explicit source UUIDs and immutable person/encounter UUIDs bound to exact native primary keys; no patient code or clinician username is an identity join. Before adopting any actual clinical source, obtain a separate approved data/record-identity provisioning and migration decision, source UUID custody, audited operational access and record-ownership review. Never auto-link by name/email/code or auto-import current patient data. Rehearse future changes only against generated synthetic fixtures.
 
 ### 3. Scheduling and encounter API contracts
 
@@ -67,4 +73,4 @@ Synthetic end-to-end journey: patient registers → sees clinician availability 
 
 ## Current limits
 
-The two systems are not yet wired together and there is no unified frontend. The original stroke runtime and real model inference are unverified here. UI warnings are source changes with syntax checks, not browser verification. Booking now has audited admin provisioning APIs, local encrypted recovery/activation handoff and revocable bounded sessions. It still has no staff provisioning UI, refresh token flow, pagination, local hospital timezone, automated notification delivery, request idempotency key or production deployment hardening. MongoDB direct writes outside the API can violate interval overlap policy; the confirmed-slot unique index remains a separate database invariant. Six concurrent requests are regression evidence, not a capacity or production safety claim. See [verified results](hospital-milestone-1-verification.md).
+New synthetic clinical read paths now validate booking identities and explicit linkage, but the original Streamlit system remains separate and there is no unified frontend. The original stroke runtime and real model inference are unverified here. UI warnings are source changes with syntax checks, not browser verification. Booking now has audited admin provisioning APIs, local encrypted recovery/activation handoff and revocable bounded sessions. It still has no staff provisioning UI, refresh token flow, pagination, local hospital timezone, automated notification delivery, request idempotency key or production deployment hardening. MongoDB direct writes outside the API can violate interval overlap policy; the confirmed-slot unique index remains a separate database invariant. Six concurrent requests are regression evidence, not a capacity or production safety claim. See [verified results](hospital-milestone-1-verification.md).

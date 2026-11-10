@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:person-command:v1",
+  "title": "Explicit native primary-key registration; recordId is patients.id or users.id according to role",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "sourceId",
+    "role",
+    "recordId"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "sourceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "patient",
+        "doctor",
+        "technician"
+      ]
+    },
+    "recordId": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

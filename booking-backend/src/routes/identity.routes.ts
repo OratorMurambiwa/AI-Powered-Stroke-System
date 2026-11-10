@@ -16,6 +16,13 @@ router.get('/me', (req: AuthRequest, res) => { res.json(principal(req)); });
 router.post('/introspect', (req: AuthRequest, res, next) => {
   try { fields(req.body ?? {}, []); res.json({ active: true, ...principal(req) }); } catch (e) { next(e); }
 });
+// Separate closed contract: do not add fields to milestone-2A introspection v1.
+router.post('/clinical-introspect', (req: AuthRequest, res, next) => {
+  try {
+    fields(req.body ?? {}, []);
+    res.json({ active: true, ...principal(req), roleVersion: req.user!.roleVersion });
+  } catch (e) { next(e); }
+});
 router.get('/sessions', route(async (req: AuthRequest, res) => {
   res.json({ schemaVersion: 1, sessions: await IdentitySession.find({ userId: req.user!.id, revokedAt: null,
     expiresAt: { $gt: new Date() } }).select('_id issuedAt expiresAt').limit(100) });

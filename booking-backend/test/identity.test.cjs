@@ -396,6 +396,34 @@ test('shared identity authority against synthetic real MongoDB', async t => {
     const replay = await operatorCli('deliver', ['synthetic-cli-operator', created.deliveryId, 'HANDOFF'], 'synthetic_operator_test');
     assert.notEqual(replay.code, 0); assert.equal(replay.output, '');
   });
+  await t.test('clinical introspection is a separate versioned live proof and preserves the original contract', async () => {
+    const original = await api('post', prefix + '/introspect', patient).send({});
+    assert.equal(original.body.roleVersion, undefined);
+    const response = await api('post', prefix + '/clinical-introspect', patient).send({});
+    assert.equal(response.status, 200);
+    const schema = require('../contracts/clinical-introspection-v1.schema.json');
+    assert.deepEqual(Object.keys(response.body).sort(), [...schema.required].sort());
+    assert.equal(response.body.roleVersion, 0);
+    assert.equal((await api('post', prefix + '/clinical-introspect').send({})).status, 401);
+    assert.equal((await api('post', prefix + '/clinical-introspect', patient).send({ roleVersion: 0 })).status, 400);
+  });
+  await t.test('clinical role generation changes on reassignment but survives password/session changes', async () => {
+    const actor = await activate(await provision('doctor'));
+    const proof = async user => (await api('post', prefix + '/clinical-introspect', user).send({})).body;
+    assert.equal((await proof(actor)).roleVersion, 0);
+    assert.equal((await api('post', prefix + '/auth/logout-all', actor)).status, 204);
+    let current = await login(actor.email);
+    assert.equal((await proof(current)).roleVersion, 0);
+    assert.equal((await api('post', prefix + '/auth/password/change', current).send({ currentPassword: secret, newPassword: 'Synthetic-Epoch-Password!' })).status, 204);
+    current = await login(actor.email, 'Synthetic-Epoch-Password!');
+    assert.equal((await proof(current)).roleVersion, 0);
+    for (const [role, epoch] of [['technician', 1], ['doctor', 2]]) {
+      assert.equal((await api('patch', prefix + `/staff/${actor.id}/role`, admin).send({ role, reason: 'SYNTHETIC role epoch', currentPassword: secret })).status, 200);
+      assert.equal((await api('post', prefix + '/clinical-introspect', current).send({})).status, 401);
+      current = await login(actor.email, 'Synthetic-Epoch-Password!');
+      assert.equal((await proof(current)).roleVersion, epoch);
+    }
+  });
   await t.test('mutual concurrent admin revocation cannot remove every active administrator', async () => {
     const other = await activate(await provision('admin'));
     const responses = await Promise.all([

@@ -279,3 +279,7 @@ Stroke predictions and AI treatment suggestions are **experimental and require c
 ### Shared identity authority (milestone 2A)
 
 Booking now owns new patient/doctor/technician/admin identities, revocable short-lived sessions, audited staff activation/revocation and local secure password recovery. See [identity v1](docs/identity-v1.md) and [milestone 2A verification](docs/hospital-milestone-2a-verification.md). Legacy Streamlit sessions remain separate; no accounts are linked by name/email and no clinical data migration is performed. Recovery delivery is a private manual operator handoff, not an enabled email service.
+
+### Explicit clinical linkage (milestone 2B)
+
+[`clinical_api/`](clinical_api/README.md) adds isolated synthetic-only read paths with live identity introspection, explicit source/record UUID links and encounter-specific doctor/technician assignments. Admin tokens grant no clinical access. No existing records are imported or matched by name/email/patient code, and Streamlit remains separate. See [clinical linkage v1](docs/clinical-linkage-v1.md) and [2B verification](docs/hospital-milestone-2b-verification.md).

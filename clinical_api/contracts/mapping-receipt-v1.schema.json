@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:mapping-receipt:v1",
+  "title": "Immutable approved mapping creation receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "mappingId",
+    "issuer",
+    "subject",
+    "personId",
+    "role",
+    "roleVersion",
+    "sourceId",
+    "createdAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "mappingId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "issuer": {
+      "const": "urn:stroke-platform:identity:v1"
+    },
+    "subject": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{24}$"
+    },
+    "personId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "patient",
+        "doctor",
+        "technician"
+      ]
+    },
+    "roleVersion": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sourceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

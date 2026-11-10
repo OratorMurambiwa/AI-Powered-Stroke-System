@@ -90,3 +90,9 @@ An introspected principal is identity only. Before accessing a clinical patient/
 ## Remaining work
 
 Shared portal/clinical API, explicit patient linkage, clinical record ownership review, browser integration, production TLS/service authentication, MFA/step-up beyond password recheck, distributed rate limiting, approved email transport and key/backup/retention procedures remain future work. Rate limits are per process/IP, not a distributed brute-force defense. No clinical data/inference or hosted model call was used for this milestone. Stroke predictions/treatment suggestions remain experimental and require clinician review.
+
+## Milestone 2B clinical extension
+
+The original `/introspect` and `/me` schemas above remain unchanged. New clinical consumers use `/api/v1/identity/clinical-introspect`, a separate closed v1 proof containing the same live principal plus `roleVersion`. Staff role changes/revocation advance that generation; ordinary password/session lifecycle operations do not. This prevents stale mappings/assignments from reviving after a role round trip, without binding durable linkage to one login session.
+
+[Clinical linkage v1](clinical-linkage-v1.md) defines the explicit synthetic-only record registry, local operator-approved mappings and encounter assignments. The new Python read paths validate live authority proofs and deny admins clinical data. No existing SQLite account or Streamlit session is linked automatically. The 2A statements above describe its original scope; 2B adds these isolated paths without integrating or migrating the legacy app.

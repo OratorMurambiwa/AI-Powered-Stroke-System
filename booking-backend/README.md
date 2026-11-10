@@ -43,3 +43,7 @@ The backend owns new shared identities for patient, doctor, technician and admin
 See [identity v1](../docs/identity-v1.md) for session invalidation, password change/recovery, initial administrator setup, encrypted local handoff, audit behavior, role permissions and the future Python introspection contract. Old milestone-1 JWTs must be replaced by logging in. The one-time bootstrap is a CLI-only explicit action; normal startup never creates users. Existing data is not migrated or relinked.
 
 The Docker suite runs booking regressions and identity/recovery/CLI/concurrency scenarios using separate synthetic databases inside the private tmpfs fixture. [Milestone 2A verification](../docs/hospital-milestone-2a-verification.md) distinguishes executed tests from unverified clinical integration.
+
+## Clinical linkage extension (milestone 2B)
+
+The separate `/api/v1/identity/clinical-introspect` response adds a persisted role generation for the new synthetic clinical boundary; existing identity v1 response shapes remain unchanged. See [clinical linkage v1](../docs/clinical-linkage-v1.md). No existing account is migrated/linked by server startup. Full booking plus cross-language regressions run with `bash scripts/test-clinical-bridge.sh` from the repository root.
