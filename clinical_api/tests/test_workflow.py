@@ -36,7 +36,7 @@ class ResponseFault:
         start_response(*captured)
         return [raw]
 
-class WorkflowIntegration(ClinicalFixture, unittest.TestCase):
+class WorkflowFixture(ClinicalFixture):
     database = 'synthetic_workflow_identity'
     store_version = 2
     booking_day = 0
@@ -113,6 +113,7 @@ class WorkflowIntegration(ClinicalFixture, unittest.TestCase):
         finally:
             connection.close()
 
+class WorkflowIntegration(WorkflowFixture, unittest.TestCase):
     def test_confirmed_booking_to_owned_assigned_encounter(self):
         appointment = self.book()
         intent = self.intent()

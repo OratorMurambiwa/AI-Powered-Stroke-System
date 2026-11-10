@@ -287,3 +287,5 @@ Booking now owns new patient/doctor/technician/admin identities, revocable short
 ### Booking-to-assessment workflow (milestone 3)
 
 Confirmed synthetic appointments now support durable, idempotent assessment intake through the separate Python service. Emergency intake requires an explicit patient-scoped staff grant. Clinical reads are audited before disclosure. [Appointment/encounter v1](docs/appointment-encounters-v1.md) documents contracts, conservative cancellation policy, partial-failure retries and new-store configuration; [Milestone 3 verification](docs/hospital-milestone-3-verification.md) records executed evidence. No historical store, Streamlit session or clinical model is integrated automatically.
+
+Synthetic assessment capture, private PNG uploads and human approval (no inference): [Milestone 4A workflow](docs/assessment-workflow-v1.md) and [verification](docs/hospital-milestone-4a-verification.md).

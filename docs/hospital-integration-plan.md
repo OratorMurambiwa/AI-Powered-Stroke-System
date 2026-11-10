@@ -55,6 +55,10 @@ New versioned appointment UUIDs and durable MongoDB assessment intents connect t
 
 Original source stores remain read-only; there is no in-place v1 upgrade or historical UUID backfill. Existing Streamlit/credentials/scans/models remain separate. See [appointment/encounter v1](appointment-encounters-v1.md) and [Milestone 3 results](hospital-milestone-3-verification.md) for exact states, cancellation limits, schema contracts and actual verification.
 
+## Milestone 4A — synthetic human assessment and review
+
+The explicitly initialized v3 clinical store extends scheduled/emergency encounters with attributed vitals/NIHSS observations, private bounded PNG blobs, internal doctor notes and revisioned submit/approve/reject actions. SQLite atomically commits immutable request receipts, snapshots, provenance and mutation audits. Live authority/assignment checks protect every action and download; patients receive only their own immutable clinician-approved projection. No ML/treatment/hosted AI or legacy login path is enabled. v1/v2 stores and original sources are not upgraded/adopted. See [assessment workflow v1](assessment-workflow-v1.md) and [4A verification](hospital-milestone-4a-verification.md).
+
 ## Subsequent integration milestones
 
 ### 2C. Approved clinical adoption and production identity hardening
@@ -69,9 +73,9 @@ Milestone 3 implements versioned appointment/intake/receipt contracts, explicit 
 
 Keep Mongo scheduling and SQLite clinical data separate initially behind narrow APIs. Do not make cross-database writes appear atomic. Use an outbox/idempotent consumer if encounters or notifications later span services. Existing standalone MongoDB data would require an explicit replica-set/index preflight; do not point this milestone at such data.
 
-### 4. Unified portal and experimental clinical boundary
+### 4B. Unified portal and future experimental clinical boundary
 
-Build the shared patient/staff portal after contracts and identity are agreed. Do not treat booking JWTs as Streamlit authentication automatically. Extract server-side clinical operations into a supported API with ownership checks, private scan access and audited clinician review. Add structured provenance (model/version, inputs, time, uncertainty) and distinct generated-draft versus clinician-approved treatment fields. Keep explicit experimental labeling, clinician attestation and no autonomous treatment execution. Consolidate the duplicate hosted generation paths, default external generation off, and evaluate any local model separately on synthetic/de-identified approved evaluation data. Model percentages must not be advertised as validated clinical confidence.
+Build the shared patient/staff portal after contracts and identity are agreed. Do not treat booking JWTs as Streamlit authentication automatically. Milestone 4A supplies synthetic server-side observations, private PNG delivery and audited human review; a shared frontend and approved real-source adoption are still required. Add structured provenance (model/version, inputs, time, uncertainty) and distinct generated-draft versus clinician-approved treatment fields. Keep explicit experimental labeling, clinician attestation and no autonomous treatment execution. Consolidate the duplicate hosted generation paths, default external generation off, and evaluate any local model separately on synthetic/de-identified approved evaluation data. Model percentages must not be advertised as validated clinical confidence.
 
 ### 5. Operational verification
 

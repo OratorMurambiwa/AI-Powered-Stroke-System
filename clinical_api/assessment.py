@@ -29,7 +29,7 @@ class AssessmentService:
         return link
 
     def scheduled(self, bearer: str, command: dict) -> dict:
-        if self.store.version != 2:
+        if self.store.version < 2:
             raise ClinicalError(503, 'assessment_store_v2_required')
         fields(command, {'schemaVersion','mode','requestId','appointmentId','encounterId','sourceId','patientId','patientMappingId','clinicianMappingId'})
         if command['mode'] != 'SCHEDULED':
@@ -65,7 +65,7 @@ class AssessmentService:
             return receipt
 
     def emergency(self, bearer: str, command: dict) -> dict:
-        if self.store.version != 2:
+        if self.store.version < 2:
             raise ClinicalError(503, 'assessment_store_v2_required')
         fields(command, {'schemaVersion','requestId','sourceId','patientId','patientMappingId','actorMappingId','intakeGrantId','reasonCode'})
         for key in ('requestId','sourceId','patientId','patientMappingId','actorMappingId','intakeGrantId'):

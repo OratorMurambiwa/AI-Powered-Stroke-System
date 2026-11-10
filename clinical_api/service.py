@@ -24,7 +24,7 @@ class ClinicalService:
             raise ClinicalError(503, "record_identity_mismatch")
         return link
 
-    def _audited(self, bearer: str | None, identifier: str, kind: str, read) -> dict:
+    def _audited(self, bearer: str | None, identifier: str, kind: str, read, *, audit_action: str = "CLINICAL_READ") -> dict:
         principal = None
         failure = None
         target = "invalid"
@@ -46,7 +46,7 @@ class ClinicalService:
                                      "role": principal.role if principal else None, "resourceKind": kind,
                                      "outcome": outcome, "status": failure.status if failure else 200,
                                      "errorCode": failure.code if failure else None}, separators=(",", ":"))
-                self.store.audit(db, "CLINICAL_READ", target, principal.subject if principal else "unauthenticated", reason)
+                self.store.audit(db, audit_action, target, principal.subject if principal else "unauthenticated", reason)
         except ClinicalError:
             # No clinical payload may be disclosed without a committed read audit.
             raise ClinicalError(503, "clinical_audit_unavailable") from None
@@ -92,7 +92,7 @@ class ClinicalService:
                     raise ClinicalError(503, "clinical_record_unavailable")
                 detail = {"mode": row['mode'], "appointmentId": row['appointment_id'], "status": row['status'], "reasonCode": row['reason_code'], "createdAt": row['created_at']}
             else:
-                detail = self.source.encounter(encounter["native_id"], person["native_id"], target, person["id"])
+                detail = {"status": "LEGACY_RESULT_UNAVAILABLE"} if self.store.version == 3 and principal.role == "patient" else self.source.encounter(encounter["native_id"], person["native_id"], target, person["id"])
             return {"schemaVersion": 1, "encounterId": target, "patientId": person["id"],
                     "encounter": detail, "experimental": True, "clinicianReviewRequired": True}
         return self._audited(bearer, encounter_id, "encounter", read)

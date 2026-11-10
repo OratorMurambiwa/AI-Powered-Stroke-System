@@ -3,12 +3,14 @@ import re
 from .errors import ClinicalError
 from .service import ClinicalService
 from .assessment import AssessmentService
+from .workflow import ReviewWorkflow
 from .validation import strict_json
 
 class ClinicalApplication:
     def __init__(self, service: ClinicalService):
         self.service = service
-        self.assessments = AssessmentService(service) if service.store.version == 2 else None
+        self.assessments = AssessmentService(service) if service.store.version >= 2 else None
+        self.workflow = ReviewWorkflow(service) if service.store.version == 3 else None
 
     def __call__(self, environ, start_response):
         status = 200
@@ -18,17 +20,22 @@ class ClinicalApplication:
             path = environ.get("PATH_INFO", "")
             bearer = environ.get("HTTP_AUTHORIZATION")
             method = environ.get("REQUEST_METHOD")
-            if method == "POST" and self.assessments and path in {"/api/v1/clinical/assessment-requests", "/api/v1/clinical/emergency-assessments"}:
-                length = environ.get("CONTENT_LENGTH", "")
-                if not length.isdigit() or not 1 <= int(length) <= 8192 or not environ.get('CONTENT_TYPE', '').startswith('application/json'):
-                    raise ClinicalError(400, "invalid_request_body")
-                try:
-                    raw = environ['wsgi.input'].read(int(length))
-                    if len(raw) != int(length):
-                        raise ValueError
-                    command = strict_json(raw)
-                except (ValueError, UnicodeError, RecursionError):
-                    raise ClinicalError(400, "invalid_request_body") from None
+            workflow_match = re.fullmatch(r"/api/v1/clinical/encounters/([^/]+)/assessment", path) if self.workflow else None
+            scan_match = re.fullmatch(r"/api/v1/clinical/encounters/([^/]+)/scans/([^/]+)", path) if self.workflow else None
+            if method == "GET" and scan_match:
+                raw = self.workflow.scan(bearer, scan_match[1], scan_match[2])
+                start_response('200 OK', [('Content-Type','image/png'),('Content-Length',str(len(raw))),
+                    ('Content-Disposition',f'attachment; filename="{scan_match[2]}.png"'),
+                    ('Cache-Control','no-store'),('X-Content-Type-Options','nosniff'),
+                    ('Content-Security-Policy',"default-src 'none'; sandbox")])
+                return [raw]
+            if method == "GET" and workflow_match:
+                result = self.workflow.read(bearer, workflow_match[1])
+            elif method == "POST" and workflow_match:
+                command = self._body(environ, 1400000)
+                result = self.workflow.mutate(bearer, workflow_match[1], command)
+            elif method == "POST" and self.assessments and path in {"/api/v1/clinical/assessment-requests", "/api/v1/clinical/emergency-assessments"}:
+                command = self._body(environ, 8192)
                 result = self.assessments.scheduled(bearer, command) if path.endswith('/assessment-requests') else self.assessments.emergency(bearer, command)
             elif method != "GET":
                 raise ClinicalError(405, "method_not_allowed")
@@ -54,3 +61,20 @@ class ClinicalApplication:
             ("Cache-Control", "no-store"), ("X-Content-Type-Options", "nosniff"),
         ])
         return [raw]
+
+    @staticmethod
+    def _body(environ, maximum):
+        length = environ.get('CONTENT_LENGTH', '')
+        if environ.get('HTTP_TRANSFER_ENCODING'):
+            raise ClinicalError(400, 'invalid_request_body')
+        if not length.isdigit() or not 1 <= int(length) <= maximum:
+            raise ClinicalError(413 if length.isdigit() and int(length) > maximum else 400, 'invalid_request_body')
+        if environ.get('CONTENT_TYPE', '').split(';')[0].strip().lower() != 'application/json':
+            raise ClinicalError(415, 'unsupported_media_type')
+        try:
+            raw = environ['wsgi.input'].read(int(length))
+            if len(raw) != int(length):
+                raise ValueError
+            return strict_json(raw)
+        except (ValueError, UnicodeError, RecursionError):
+            raise ClinicalError(400, 'invalid_request_body') from None

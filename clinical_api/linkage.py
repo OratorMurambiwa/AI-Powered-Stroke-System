@@ -94,7 +94,7 @@ class LinkOperator:
     def grant_intake(self, command: dict, bearer: str, operator: str, reason: str) -> dict:
         import time
         fields(command, {"schemaVersion", "mappingId", "patientId", "expiresAt"})
-        if self.store.version != 2:
+        if self.store.version < 2:
             raise ClinicalError(503, "assessment_store_v2_required")
         mapping_id, patient_id = uuid_id(command["mappingId"]), uuid_id(command["patientId"])
         expiry = integer(command["expiresAt"])
@@ -118,7 +118,7 @@ class LinkOperator:
     def revoke_intake(self, command: dict, operator: str, reason: str) -> None:
         fields(command, {"schemaVersion", "id"})
         grant_id = uuid_id(command["id"])
-        if self.store.version != 2:
+        if self.store.version < 2:
             raise ClinicalError(503, "assessment_store_v2_required")
         with self.store.connection(write=True) as db:
             result = db.execute("UPDATE intake_grants SET revoked_at=? WHERE id=? AND revoked_at IS NULL", (timestamp(), grant_id))

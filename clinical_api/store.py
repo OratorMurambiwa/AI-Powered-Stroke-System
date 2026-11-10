@@ -12,7 +12,7 @@ def timestamp() -> str:
 
 class LinkStore:
     def __init__(self, path: Path, source_id: str, version: int = 1):
-        if type(version) is not int or version not in {1, 2}:
+        if type(version) is not int or version not in {1, 2, 3}:
             raise ValueError("Explicit supported store version required")
         self.version = version
         self.path = Path(path).resolve()
@@ -24,7 +24,7 @@ class LinkStore:
         os.close(descriptor)
         db = sqlite3.connect(self.path)
         try:
-            db.executescript(Path(__file__).with_name("schema.sql" if self.version == 1 else "schema-v2.sql").read_text())
+            db.executescript(Path(__file__).with_name("schema.sql" if self.version == 1 else f"schema-v{self.version}.sql").read_text())
             db.execute("INSERT INTO metadata VALUES(?,?)", (self.version, self.source_id))
             db.commit()
         finally:

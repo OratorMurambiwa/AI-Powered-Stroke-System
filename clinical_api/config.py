@@ -18,7 +18,7 @@ class Config:
     def from_environment(cls):
         if os.environ.get("CLINICAL_DATA_MODE") != "synthetic":
             raise ValueError("Milestone 2B accepts explicitly marked synthetic sources only")
-        if os.environ.get("CLINICAL_STORE_VERSION", "1") not in {"1", "2"}:
+        if os.environ.get("CLINICAL_STORE_VERSION", "1") not in {"1", "2", "3"}:
             raise ValueError("Unsupported clinical store version")
         # No dotenv discovery, default patient DB path or automatic schema creation.
         return cls(Path(os.environ["CLINICAL_RECORDS_DB"]), Path(os.environ["CLINICAL_LINKS_DB"]),

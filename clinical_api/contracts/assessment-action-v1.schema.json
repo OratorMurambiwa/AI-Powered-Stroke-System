@@ -1,0 +1,408 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:assessment-action:v1",
+  "title": "Human-entered synthetic assessment action",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "expectedVersion",
+        "action",
+        "data"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127
+        },
+        "action": {
+          "const": "OBSERVATIONS"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "vitals",
+            "nihss",
+            "observedAt"
+          ],
+          "properties": {
+            "vitals": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "systolicMmHg",
+                "diastolicMmHg",
+                "pulseBpm",
+                "temperatureC",
+                "oxygenPercent",
+                "glucoseMgDl"
+              ],
+              "properties": {
+                "systolicMmHg": {
+                  "type": "number",
+                  "minimum": 20,
+                  "maximum": 300
+                },
+                "diastolicMmHg": {
+                  "type": "number",
+                  "minimum": 10,
+                  "maximum": 200
+                },
+                "pulseBpm": {
+                  "type": "number",
+                  "minimum": 10,
+                  "maximum": 300
+                },
+                "temperatureC": {
+                  "type": "number",
+                  "minimum": 25,
+                  "maximum": 45
+                },
+                "oxygenPercent": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "glucoseMgDl": {
+                  "type": "number",
+                  "minimum": 10,
+                  "maximum": 1000
+                }
+              }
+            },
+            "nihss": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "consciousness",
+                "questions",
+                "commands",
+                "gaze",
+                "visual",
+                "facial",
+                "leftArm",
+                "rightArm",
+                "leftLeg",
+                "rightLeg",
+                "ataxia",
+                "sensory",
+                "language",
+                "dysarthria",
+                "neglect"
+              ],
+              "properties": {
+                "consciousness": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "questions": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "commands": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "gaze": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "visual": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "facial": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "leftArm": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "rightArm": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "leftLeg": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "rightLeg": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "ataxia": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "sensory": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "language": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "dysarthria": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "neglect": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                }
+              }
+            },
+            "observedAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "UTC offset zero; cannot be in the future."
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "expectedVersion",
+        "action",
+        "data"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127
+        },
+        "action": {
+          "const": "SCAN"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mediaType",
+            "contentBase64"
+          ],
+          "properties": {
+            "mediaType": {
+              "const": "image/png"
+            },
+            "contentBase64": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1398104,
+              "contentEncoding": "base64"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "expectedVersion",
+        "action",
+        "data"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127
+        },
+        "action": {
+          "const": "NOTE"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "expectedVersion",
+        "action",
+        "data"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127
+        },
+        "action": {
+          "const": "SUBMIT"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [],
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "expectedVersion",
+        "action",
+        "data"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127
+        },
+        "action": {
+          "const": "APPROVE"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "summary",
+            "attested"
+          ],
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "attested": {
+              "const": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "expectedVersion",
+        "action",
+        "data"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 127
+        },
+        "action": {
+          "const": "REJECT"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "summary",
+            "attested"
+          ],
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "attested": {
+              "const": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

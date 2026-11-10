@@ -1,0 +1,688 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:assessment-view:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "encounterId",
+    "version",
+    "state",
+    "experimental",
+    "inferencePerformed",
+    "clinicianReviewRequired",
+    "summary",
+    "reviewedBy",
+    "reviewedAt",
+    "observations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "encounterId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 128
+    },
+    "state": {
+      "enum": [
+        "DRAFT",
+        "SUBMITTED",
+        "APPROVED",
+        "REJECTED"
+      ]
+    },
+    "experimental": {
+      "const": true
+    },
+    "inferencePerformed": {
+      "const": false
+    },
+    "clinicianReviewRequired": {
+      "const": true
+    },
+    "summary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reviewedBy": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reviewedAt": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "observations": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/staffObservations"
+        },
+        {
+          "$ref": "#/$defs/patientObservations"
+        }
+      ]
+    },
+    "history": {
+      "type": "array",
+      "maxItems": 128,
+      "description": "Assigned staff only; immutable input snapshots and versioned provenance.",
+      "items": {
+        "$ref": "#/$defs/change"
+      }
+    }
+  },
+  "$defs": {
+    "scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scanId",
+        "sha256",
+        "mediaType",
+        "size"
+      ],
+      "properties": {
+        "scanId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "mediaType": {
+          "const": "image/png"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "subject",
+        "mappingId",
+        "role",
+        "roleVersion",
+        "sessionId",
+        "at",
+        "inputSha256",
+        "experimental",
+        "inferencePerformed",
+        "summary"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "subject": {
+          "type": "string"
+        },
+        "mappingId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "role": {
+          "enum": [
+            "doctor",
+            "technician"
+          ]
+        },
+        "roleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "inputSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "experimental": {
+          "const": true
+        },
+        "inferencePerformed": {
+          "const": false
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "staffObservations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vitals": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "systolicMmHg",
+                "diastolicMmHg",
+                "pulseBpm",
+                "temperatureC",
+                "oxygenPercent",
+                "glucoseMgDl"
+              ],
+              "properties": {
+                "systolicMmHg": {
+                  "type": "number",
+                  "minimum": 20,
+                  "maximum": 300
+                },
+                "diastolicMmHg": {
+                  "type": "number",
+                  "minimum": 10,
+                  "maximum": 200
+                },
+                "pulseBpm": {
+                  "type": "number",
+                  "minimum": 10,
+                  "maximum": 300
+                },
+                "temperatureC": {
+                  "type": "number",
+                  "minimum": 25,
+                  "maximum": 45
+                },
+                "oxygenPercent": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "glucoseMgDl": {
+                  "type": "number",
+                  "minimum": 10,
+                  "maximum": 1000
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nihss": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "consciousness",
+                "questions",
+                "commands",
+                "gaze",
+                "visual",
+                "facial",
+                "leftArm",
+                "rightArm",
+                "leftLeg",
+                "rightLeg",
+                "ataxia",
+                "sensory",
+                "language",
+                "dysarthria",
+                "neglect"
+              ],
+              "properties": {
+                "consciousness": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "questions": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "commands": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "gaze": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "visual": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "facial": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "leftArm": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "rightArm": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "leftLeg": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "rightLeg": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "ataxia": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "sensory": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "language": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "dysarthria": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "neglect": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scans": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/scan"
+          }
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "subject": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{24}$"
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "text",
+              "subject",
+              "at"
+            ]
+          }
+        }
+      },
+      "required": [
+        "vitals",
+        "nihss",
+        "scans",
+        "notes"
+      ]
+    },
+    "patientObservations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vitals": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "systolicMmHg",
+                "diastolicMmHg",
+                "pulseBpm",
+                "temperatureC",
+                "oxygenPercent",
+                "glucoseMgDl"
+              ],
+              "properties": {
+                "systolicMmHg": {
+                  "type": "number",
+                  "minimum": 20,
+                  "maximum": 300
+                },
+                "diastolicMmHg": {
+                  "type": "number",
+                  "minimum": 10,
+                  "maximum": 200
+                },
+                "pulseBpm": {
+                  "type": "number",
+                  "minimum": 10,
+                  "maximum": 300
+                },
+                "temperatureC": {
+                  "type": "number",
+                  "minimum": 25,
+                  "maximum": 45
+                },
+                "oxygenPercent": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "glucoseMgDl": {
+                  "type": "number",
+                  "minimum": 10,
+                  "maximum": 1000
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nihss": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "consciousness",
+                "questions",
+                "commands",
+                "gaze",
+                "visual",
+                "facial",
+                "leftArm",
+                "rightArm",
+                "leftLeg",
+                "rightLeg",
+                "ataxia",
+                "sensory",
+                "language",
+                "dysarthria",
+                "neglect"
+              ],
+              "properties": {
+                "consciousness": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "questions": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "commands": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "gaze": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "visual": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "facial": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "leftArm": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "rightArm": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "leftLeg": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "rightLeg": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4
+                },
+                "ataxia": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "sensory": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "language": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "dysarthria": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                },
+                "neglect": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scans": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/scan"
+          }
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "vitals",
+        "nihss",
+        "scans",
+        "observedAt"
+      ]
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "subject": {
+          "type": "string"
+        },
+        "mappingId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "role": {
+          "enum": [
+            "doctor",
+            "technician"
+          ]
+        },
+        "roleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "inputSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "experimental": {
+          "const": true
+        },
+        "inferencePerformed": {
+          "const": false
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "action": {
+          "enum": [
+            "OBSERVATIONS",
+            "SCAN",
+            "NOTE",
+            "SUBMIT",
+            "APPROVE",
+            "REJECT"
+          ]
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128
+        },
+        "snapshot": {
+          "$ref": "#/$defs/staffObservations"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "subject",
+        "mappingId",
+        "role",
+        "roleVersion",
+        "sessionId",
+        "at",
+        "inputSha256",
+        "experimental",
+        "inferencePerformed",
+        "summary",
+        "action",
+        "version",
+        "snapshot"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "history"
+        ]
+      },
+      "then": {
+        "properties": {
+          "observations": {
+            "$ref": "#/$defs/staffObservations"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "state": {
+            "const": "APPROVED"
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "reviewedBy": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{24}$"
+          },
+          "reviewedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "observations": {
+            "$ref": "#/$defs/patientObservations"
+          }
+        }
+      }
+    }
+  ]
+}
