@@ -1,3 +1,4 @@
+from core.registration_policy import require_patient_registration
 from core.database import get_db_session, get_db_context
 from models import User
 from models.patient import Patient
@@ -41,24 +42,8 @@ def authenticate_user(username: str, password: str, role: str):
 
 
 def ensure_default_users():
-    """
-    Creates default demo users on fresh database.
-    """
-    with get_db_context() as db:
-        # If any users already exist, skip
-        if db.query(User).first():
-            return
-
-        # Create demo users
-        users = [
-            User(username="tech1", role="technician", password_hash=bcrypt_hash("pass123")),
-            User(username="doc1", role="physician", password_hash=bcrypt_hash("pass123")),
-            User(username="patient1", role="patient", password_hash=bcrypt_hash("pass123")),
-        ]
-
-        db.add_all(users)
-        db.commit()
-        print("Default demo users created.")
+    """Compatibility hook: automatic creation of known-password users is disabled."""
+    return None
 
 
 def get_doctor_list():
@@ -72,17 +57,16 @@ def get_doctor_list():
 
 
 def create_user(role: str, username: str, password: str, *, patient_code: str | None = None, full_name: str | None = None):
-    """Create a new user.
+    """Public patient registration only; staff require operator provisioning.
 
-    - role: one of 'technician', 'physician', 'patient'
+    - role: must be 'patient'
     - username: unique username; for patients, this should be the patient code (e.g., P001)
     - password: raw password, will be hashed
     - patient_code: required when role='patient'; must refer to an existing Patient.patient_id
     - full_name: optional display name
     """
     role = (role or "").strip().lower()
-    if role not in {"technician", "physician", "patient"}:
-        raise ValueError("Invalid role. Expected technician, physician, or patient.")
+    require_patient_registration(role)
 
     username = (username or "").strip()
     if not username:
@@ -111,17 +95,6 @@ def create_user(role: str, username: str, password: str, *, patient_code: str | 
             db.commit()
             db.refresh(user)
             return user
-
-    # Technician / Physician
-    with get_db_context() as db:
-        if db.query(User).filter(User.username == username).first():
-            raise ValueError("Username already exists.")
-
-        user = User(username=username, role=role, password_hash=bcrypt_hash(password), full_name=full_name)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        return user
 
 
 def get_current_user():

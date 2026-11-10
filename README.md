@@ -269,3 +269,9 @@ python -m streamlit run app.py
 ```
 
 Happy prototyping!
+
+## Hospital platform integration (milestone 1)
+
+The source-attributed TypeScript booking backend is in [`booking-backend/`](booking-backend/README.md). The original Hospital-booking-system repository is preserved. Read the [implementation audit and integration plan](docs/hospital-integration-plan.md) and [verified results](docs/hospital-milestone-1-verification.md) before running it. This milestone does not yet connect booking identities or appointments to clinical records.
+
+Stroke predictions and AI treatment suggestions are **experimental and require clinician review**. They are not validated diagnoses or prescribing instructions. Public staff signup and automatic default-user seeding are disabled; existing accounts/databases are unchanged. Use synthetic patients only for development. The legacy hosted treatment-generation paths must not be enabled with real patient data.

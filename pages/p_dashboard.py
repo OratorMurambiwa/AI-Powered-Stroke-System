@@ -26,6 +26,7 @@ def main():
         return
 
     st.title(f"Welcome, {p.name}")
+    st.warning('Experimental stroke predictions and AI treatment suggestions require clinician review. They are not validated diagnoses or prescribing instructions.')
 
     st.subheader("Your Profile")
     st.write(f"**Patient ID:** {p.patient_id}")

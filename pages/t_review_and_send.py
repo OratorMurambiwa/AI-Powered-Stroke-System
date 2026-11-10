@@ -12,6 +12,7 @@ require_role("technician")
 render_technician_sidebar()
 
 st.title("Final Review")
+st.warning('Experimental stroke predictions and AI treatment suggestions require clinician review. They are not validated diagnoses or prescribing instructions.')
 
 # Ensure we have an active visit
 if "current_visit_id" not in st.session_state:

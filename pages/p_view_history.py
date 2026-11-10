@@ -29,6 +29,7 @@ def main():
     patient = db.query(Patient).filter(Patient.id == visit.patient_id).first()
 
     st.title(f"Visit #{visit.id} Summary")
+    st.warning('Experimental stroke predictions and AI treatment suggestions require clinician review. They are not validated diagnoses or prescribing instructions.')
 
     st.subheader("Basic Information")
     st.write(f"**Name:** {patient.name}")

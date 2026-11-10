@@ -10,6 +10,7 @@ require_role("technician")
 render_technician_sidebar()
 
 st.title("Patient Visit History")
+st.warning('Experimental stroke predictions and AI treatment suggestions require clinician review. They are not validated diagnoses or prescribing instructions.')
 
 # Ensure a patient is selected from previous page
 if "selected_patient" not in st.session_state:

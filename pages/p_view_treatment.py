@@ -25,6 +25,7 @@ def main():
     )
 
     st.title("Treatment Plan")
+    st.warning('Experimental stroke predictions and AI treatment suggestions require clinician review. They are not validated diagnoses or prescribing instructions.')
 
     # Only display a plan if the doctor has saved non-empty content.
     if not treatment or not (treatment.plan_text or "").strip():

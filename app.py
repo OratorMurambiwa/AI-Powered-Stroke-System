@@ -73,29 +73,8 @@ def main():
 
         # Signup section
         st.markdown("### New here? Sign up")
-        signup_tab1, signup_tab2, signup_tab3 = st.tabs(["Technician", "Physician", "Patient"])
-
-        with signup_tab1:
-            tech_user = st.text_input("Username", key="su_tech_user")
-            tech_pass = st.text_input("Password", type="password", key="su_tech_pass")
-            tech_name = st.text_input("Full Name (optional)", key="su_tech_name")
-            if st.button("Create Technician Account", key="btn_su_tech"):
-                try:
-                    create_user("technician", tech_user, tech_pass, full_name=tech_name)
-                    st.success("Technician account created. You can now log in.")
-                except Exception as e:
-                    st.error(str(e))
-
-        with signup_tab2:
-            doc_user = st.text_input("Username", key="su_doc_user")
-            doc_pass = st.text_input("Password", type="password", key="su_doc_pass")
-            doc_name = st.text_input("Full Name (optional)", key="su_doc_name")
-            if st.button("Create Physician Account", key="btn_su_doc"):
-                try:
-                    create_user("physician", doc_user, doc_pass, full_name=doc_name)
-                    st.success("Physician account created. You can now log in.")
-                except Exception as e:
-                    st.error(str(e))
+        st.caption("Staff accounts require authorized operator provisioning.")
+        signup_tab3, = st.tabs(["Patient"])
 
         with signup_tab3:
             st.caption("Patients must sign up with their existing patient code (e.g., P003)")

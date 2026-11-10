@@ -35,6 +35,7 @@ def main():
 
     patient = db.query(Patient).filter(Patient.id == visit.patient_id).first()
     st.title("Case Review")
+    st.warning('Experimental stroke predictions and AI treatment suggestions require clinician review. They are not validated diagnoses or prescribing instructions.')
     if patient:
         st.caption(f"Patient: {getattr(patient, 'name', '—')} | Age: {getattr(patient, 'age', '—')}")
 

@@ -11,6 +11,7 @@ require_role("technician")
 render_technician_sidebar()
 
 st.title("CT/MRI Scan Upload")
+st.warning('Experimental stroke predictions and AI treatment suggestions require clinician review. They are not validated diagnoses or prescribing instructions.')
 st.write("Upload the patient's scan and run automated analysis.")
 
 # Ensure visit exists

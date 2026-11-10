@@ -19,6 +19,7 @@ def main():
         return
 
     st.title("Finalize Case")
+    st.warning('Experimental stroke predictions and AI treatment suggestions require clinician review. They are not validated diagnoses or prescribing instructions.')
 
     visit = db.query(Visit).filter(Visit.id == visit_id).first()
     treatment = db.query(Treatment).filter(Treatment.visit_id == visit_id).first()

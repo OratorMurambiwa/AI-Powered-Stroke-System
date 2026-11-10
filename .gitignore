@@ -35,3 +35,11 @@ Thumbs.db
 
 # Backup files
 *.bak
+
+# Integration development: never add new patient stores, scans or local secrets.
+data/
+*.db
+*.sqlite
+*.sqlite3
+.env.*
+!.env.example

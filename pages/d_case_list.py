@@ -26,6 +26,7 @@ def main():
 
     status = st.session_state.get("doctor_filter_status", "all")
     st.title(f"Cases — {_status_label(status) if status != 'all' else 'All'}")
+    st.warning('Experimental stroke predictions and AI treatment suggestions require clinician review. They are not validated diagnoses or prescribing instructions.')
 
     # Optional quick filter
     q = st.text_input("Search (name, patient ID, or visit code)", placeholder="e.g., Jane or P003 or V001").strip().lower()
