@@ -1,12 +1,15 @@
 import mongoose from 'mongoose';
 import { Availability } from '../models/Availability';
+import { assertActor, Principal } from '../services/identity.service';
 import { User } from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import { day, times, fields, objectId, HttpError, route } from '../utils/http';
 
 // This persisted write serializes schedule changes across all API processes.
-async function lockDoctor(id: string, session: mongoose.ClientSession): Promise<void> {
-  const doctor = await User.findOneAndUpdate({ _id: id, role: 'doctor' }, { $inc: { scheduleVersion: 1 } }, { session, new: true });
+async function lockDoctor(principal: Principal, session: mongoose.ClientSession): Promise<void> {
+  await assertActor(principal, session, ['doctor']);
+  const id = principal.id;
+  const doctor = await User.findOneAndUpdate({ _id: id, role: { $in: ['doctor', 'physician'] } }, { $inc: { scheduleVersion: 1 } }, { session, new: true });
   if (!doctor) throw new HttpError(403, 'A doctor account is required');
 }
 function schedule(body: unknown) {
@@ -22,7 +25,7 @@ export const createAvailability = route(async (req: AuthRequest, res) => {
   const input = schedule(req.body);
   const doctorId = req.user!.id;
   const availability = await mongoose.connection.transaction(async session => {
-    await lockDoctor(doctorId, session);
+    await lockDoctor(req.user!, session);
     if (await Availability.exists({ doctorId, date: input.date, startTime: { $lt: input.endTime }, endTime: { $gt: input.startTime } }).session(session)) {
       throw new HttpError(409, 'Overlapping availability');
     }
@@ -48,7 +51,7 @@ export const updateAvailability = route(async (req: AuthRequest, res) => {
   const input = schedule(req.body);
   const doctorId = req.user!.id;
   const availability = await mongoose.connection.transaction(async session => {
-    await lockDoctor(doctorId, session);
+    await lockDoctor(req.user!, session);
     if (await Availability.exists({ _id: { $ne: id }, doctorId, date: input.date, startTime: { $lt: input.endTime }, endTime: { $gt: input.startTime } }).session(session)) {
       throw new HttpError(409, 'Overlapping availability');
     }
@@ -60,7 +63,10 @@ export const updateAvailability = route(async (req: AuthRequest, res) => {
 });
 export const deleteAvailability = route(async (req: AuthRequest, res) => {
   const id = objectId(req.params.id);
-  const slot = await Availability.findOneAndDelete({ _id: id, doctorId: req.user!.id, isBooked: false });
+  const slot = await mongoose.connection.transaction(async session => {
+    await assertActor(req.user!, session, ['doctor']);
+    return Availability.findOneAndDelete({ _id: id, doctorId: req.user!.id, isBooked: false }, { session });
+  });
   if (!slot) throw new HttpError(409, 'Slot is booked, missing or not owned by you');
   res.status(204).end();
 });

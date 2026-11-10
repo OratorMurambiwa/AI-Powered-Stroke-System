@@ -1,7 +1,8 @@
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { apiLimiter } from './middleware/rateLimiter';
+import identityRoutes from './routes/identity.routes';
 import authRoutes from './routes/auth.routes';
 import availabilityRoutes from './routes/availability.routes';
 import appointmentRoutes from './routes/appointment.routes';
@@ -22,7 +23,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(apiLimiter);
 
 // Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes); // Milestone-1 URL compatibility, same authority.
+app.use('/api/v1/identity/auth', authRoutes);
+app.use('/api/v1/identity', identityRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/health', healthRoutes);

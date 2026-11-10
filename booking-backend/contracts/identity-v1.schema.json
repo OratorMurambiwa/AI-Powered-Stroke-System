@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:identity:v1",
+  "title": "Live identity principal v1 (not a clinical authorization)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "issuer", "subject", "role", "sessionId", "expiresAt"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "issuer": { "const": "urn:stroke-platform:identity:v1" },
+    "subject": { "type": "string", "pattern": "^[a-f0-9]{24}$" },
+    "role": { "type": "string", "enum": ["patient", "doctor", "technician", "admin"] },
+    "sessionId": { "type": "string", "format": "uuid" },
+    "expiresAt": { "type": "integer", "description": "UTC Unix seconds; validate online on every protected request" }
+  }
+}

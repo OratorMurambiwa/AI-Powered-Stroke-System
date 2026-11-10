@@ -7,7 +7,7 @@ export const route = (handler: (req: Request, res: Response) => Promise<void>): 
   (req, res, next) => { Promise.resolve(handler(req, res)).catch(next); };
 export function objectId(value: unknown): string {
   if (typeof value !== 'string' || !/^[a-fA-F0-9]{24}$/.test(value)) throw new HttpError(400, 'Invalid ID');
-  return value;
+  return value.toLowerCase();
 }
 export function fields(value: unknown, allowed: string[]): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value) ||

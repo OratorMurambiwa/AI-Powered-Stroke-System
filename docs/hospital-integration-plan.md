@@ -35,11 +35,19 @@ The intended stack is Express 4 + Mongoose/MongoDB, JWT/bcrypt, Redis cache and 
 6. Close legacy stroke public staff signup at the service boundary and remove staff signup forms; disable automatic default-user creation. Existing stored users/data remain unchanged. Put experimental/clinician-review warnings on prediction/treatment and case-summary screens.
 7. Add synthetic real-MongoDB HTTP/concurrency/rollback tests, pure Python signup guard tests, reproducible Docker test tooling and verified results.
 
+## Milestone 2A — shared identity authority implemented
+
+The TypeScript booking backend is the authority for new shared identities and versioned online introspection. Canonical patient/doctor/technician/admin roles use current persisted authorization; legacy physician maps to doctor at the boundary without a data migration. Existing SQLite/Streamlit identities remain separate and grant no booking access.
+
+Session-backed JWTs expire in at most 15 minutes; logout, password changes/recovery, staff role changes and revocation invalidate sessions durably. Staff onboarding requires authenticated admin password recheck and an audited activation flow. A CLI-only one-time opt-in bootstraps the initial invited administrator, with no known default credential. Recovery/activation tokens are single-use, 15-minute and hash-stored, with an encrypted local operator delivery adapter; no email/SMS service is enabled. Audits and security changes commit together. Identity admins and technicians cannot read appointment content. Actual cross-patient, concurrency, revocation, recovery and rollback checks are recorded separately.
+
+See [identity v1 contracts and procedures](identity-v1.md) and [milestone 2A results](hospital-milestone-2a-verification.md). No existing users/data were migrated or automatically matched by name/email. Future approved clinical linkage, per-record clinical authorization and the unified frontend remain unimplemented.
+
 ## Subsequent integration milestones
 
-### 2. Identity, staff onboarding and patient linkage
+### 2B. Clinical identity linkage and production identity hardening
 
-Choose a single identity authority with hospital-verified staff roles, audited provisioning/revocation, password reset/recovery and session/token lifecycle. Add technician as an explicit least-privilege role; decide doctor/physician normalization. Review all Streamlit direct-page authorization and patient ownership checks before exposing clinical records. Existing known demo accounts must be disabled/reset explicitly by an authorized operator, not by silently editing preserved databases. Patient code alone is not sufficient identity verification for clinical access.
+Milestone 2A selected the booking authority and implemented local audited staff/session/recovery controls. Before production, review hospital staff verification, MFA, distributed throttling, transport authentication, key custody and approved delivery. Canonical doctor/physician normalization and a least-privilege technician role are implemented for booking. Review all Streamlit direct-page authorization and patient ownership checks before exposing clinical records. Existing known demo accounts must be disabled/reset explicitly by an authorized operator, not by silently editing preserved databases. Patient code alone is not sufficient identity verification for clinical access.
 
 Define a new stable patient identifier and a versioned, explicitly approved mapping between Mongo ObjectIds, SQL user/patient integers, `P###` codes and clinician usernames. Never auto-link by name/email or auto-import current patient data. Rehearse migrations only against generated synthetic fixtures; preserve originals and require a separate migration decision.
 
@@ -59,4 +67,4 @@ Synthetic end-to-end journey: patient registers → sees clinician availability 
 
 ## Current limits
 
-The two systems are not yet wired together and there is no unified frontend. The original stroke runtime and real model inference are unverified here. UI warnings are source changes with syntax checks, not browser verification. Booking has no staff provisioning UI, refresh/recovery flow, pagination, local hospital timezone, notification delivery, request idempotency key or production deployment hardening. MongoDB direct writes outside the API can violate interval overlap policy; the confirmed-slot unique index remains a separate database invariant. Six concurrent requests are regression evidence, not a capacity or production safety claim. See [verified results](hospital-milestone-1-verification.md).
+The two systems are not yet wired together and there is no unified frontend. The original stroke runtime and real model inference are unverified here. UI warnings are source changes with syntax checks, not browser verification. Booking now has audited admin provisioning APIs, local encrypted recovery/activation handoff and revocable bounded sessions. It still has no staff provisioning UI, refresh token flow, pagination, local hospital timezone, automated notification delivery, request idempotency key or production deployment hardening. MongoDB direct writes outside the API can violate interval overlap policy; the confirmed-slot unique index remains a separate database invariant. Six concurrent requests are regression evidence, not a capacity or production safety claim. See [verified results](hospital-milestone-1-verification.md).

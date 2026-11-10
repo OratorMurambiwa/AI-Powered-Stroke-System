@@ -275,3 +275,7 @@ Happy prototyping!
 The source-attributed TypeScript booking backend is in [`booking-backend/`](booking-backend/README.md). The original Hospital-booking-system repository is preserved. Read the [implementation audit and integration plan](docs/hospital-integration-plan.md) and [verified results](docs/hospital-milestone-1-verification.md) before running it. This milestone does not yet connect booking identities or appointments to clinical records.
 
 Stroke predictions and AI treatment suggestions are **experimental and require clinician review**. They are not validated diagnoses or prescribing instructions. Public staff signup and automatic default-user seeding are disabled; existing accounts/databases are unchanged. Use synthetic patients only for development. The legacy hosted treatment-generation paths must not be enabled with real patient data.
+
+### Shared identity authority (milestone 2A)
+
+Booking now owns new patient/doctor/technician/admin identities, revocable short-lived sessions, audited staff activation/revocation and local secure password recovery. See [identity v1](docs/identity-v1.md) and [milestone 2A verification](docs/hospital-milestone-2a-verification.md). Legacy Streamlit sessions remain separate; no accounts are linked by name/email and no clinical data migration is performed. Recovery delivery is a private manual operator handoff, not an enabled email service.

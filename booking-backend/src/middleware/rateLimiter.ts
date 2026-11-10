@@ -21,3 +21,7 @@ export const bookingLimiter = rateLimit({
   max: 10, // 10 booking requests per minute
   message: 'Too many booking requests, please slow down',
 });
+export const recoveryLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false,
+  message: { error: 'Too many recovery attempts' },
+});

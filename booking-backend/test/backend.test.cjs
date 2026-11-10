@@ -11,6 +11,7 @@ if (!process.env.TEST_MONGODB_URI || !process.env.TEST_MONGODB_URI.includes('str
 }
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = crypto.randomBytes(48).toString('hex');
+process.env.IDENTITY_DELIVERY_KEY = crypto.randomBytes(32).toString('hex');
 process.env.MONGODB_URI = process.env.TEST_MONGODB_URI;
 process.env.RATE_LIMIT_MAX_REQUESTS = '1000';
 const app = require('../dist/app').default;
@@ -20,7 +21,8 @@ const { Appointment } = require('../dist/models/Appointment');
 const { connectDB, disconnectDB } = require('../dist/config/database');
 const { authLimiter, bookingLimiter } = require('../dist/middleware/rateLimiter');
 let doctor, otherDoctor, patient, otherPatient, admin;
-const token = user => jwt.sign({}, process.env.JWT_SECRET, { subject: user.id, expiresIn: 3600, algorithm: 'HS256' });
+const tokens = new Map();
+const token = user => tokens.get(user.id);
 const as = (method, path, user) => request(app)[method](path).set('Authorization', `Bearer ${token(user)}`);
 const date = '2099-06-01';
 async function slot(startTime = '09:00', endTime = '10:00', user = doctor) {
@@ -39,6 +41,11 @@ before(async () => {
   [doctor, otherDoctor, patient, otherPatient, admin] = await User.create([
     ['doctor', 'doctor'], ['otherdoctor', 'doctor'], ['patient', 'patient'], ['otherpatient', 'patient'], ['admin', 'admin'],
   ].map(([name, role]) => ({ email: `${name}@example.test`, name: `Synthetic ${name}`, password: 'Synthetic-only-Password!', role })));
+  for (const user of [doctor, otherDoctor, patient, otherPatient, admin]) {
+    const login = await request(app).post('/api/auth/login').send({ email: user.email, password: 'Synthetic-only-Password!' });
+    assert.equal(login.status, 200);
+    tokens.set(user.id, login.body.token);
+  }
 });
 after(async () => { await disconnectDB(); });
 
@@ -94,11 +101,11 @@ test('authentication, schedule and booking integration against real MongoDB', as
     }
   });
   await t.test('forged token role does not confer access; revoked persisted role takes effect', async () => {
-    const forged = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET, { subject: patient.id });
+    const forged = jwt.sign({ ...jwt.decode(token(patient)), role: 'admin' }, process.env.JWT_SECRET);
     assert.equal((await request(app).post('/api/availability').set('Authorization', `Bearer ${forged}`).send({ date, startTime: '08:00', endTime: '09:00' })).status, 403);
     const oldToken = token(otherDoctor);
     await User.updateOne({ _id: otherDoctor._id }, { $set: { role: 'patient' } });
-    assert.equal((await request(app).post('/api/availability').set('Authorization', `Bearer ${oldToken}`).send({ date, startTime: '08:00', endTime: '09:00' })).status, 403);
+    assert.equal((await request(app).post('/api/availability').set('Authorization', `Bearer ${oldToken}`).send({ date, startTime: '08:00', endTime: '09:00' })).status, 401);
     await User.updateOne({ _id: otherDoctor._id }, { $set: { role: 'doctor' } });
   });
   await t.test('only doctors publish availability; invalid dates/times and injection rejected', async () => {

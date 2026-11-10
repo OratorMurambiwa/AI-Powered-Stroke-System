@@ -1,10 +1,14 @@
 import { Router } from 'express';
-import { register, login } from '../controllers/auth.controller';
-import { authLimiter } from '../middleware/rateLimiter';
-
+import { register, login, logout, logoutAll, changePassword, recoveryRequest, recoveryReset } from '../controllers/auth.controller';
+import { authenticate } from '../middleware/auth';
+import { authLimiter, recoveryLimiter } from '../middleware/rateLimiter';
 const router = Router();
-
+router.use((_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
 router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);
-
+router.post('/logout', authenticate, logout);
+router.post('/logout-all', authenticate, logoutAll);
+router.post('/password/change', authenticate, authLimiter, changePassword);
+router.post('/password-recovery/request', recoveryLimiter, recoveryRequest);
+router.post('/password-recovery/reset', recoveryLimiter, recoveryReset);
 export default router;

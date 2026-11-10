@@ -5,7 +5,11 @@ export interface IUser extends Document {
   email: string;
   password: string;
   name: string;
-  role: 'patient' | 'doctor' | 'admin';
+  role: 'patient' | 'doctor' | 'physician' | 'technician' | 'admin';
+  state: 'active' | 'invited' | 'revoked';
+  authVersion: number;
+  authWriteVersion: number;
+  recoveryRequestedAt?: Date;
   createdAt: Date;
   scheduleVersion: number;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -31,10 +35,14 @@ const userSchema = new Schema<IUser>(
       required: true,
       trim: true,
     },
+    state: { type: String, enum: ['active', 'invited', 'revoked'], default: 'active' },
+    authVersion: { type: Number, default: 0 },
+    authWriteVersion: { type: Number, default: 0, select: false },
+    recoveryRequestedAt: { type: Date, select: false },
     scheduleVersion: { type: Number, default: 0, select: false },
     role: {
       type: String,
-      enum: ['patient', 'doctor', 'admin'],
+      enum: ['patient', 'doctor', 'physician', 'technician', 'admin'],
       default: 'patient',
     },
   },
