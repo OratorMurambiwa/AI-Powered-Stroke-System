@@ -5,6 +5,7 @@ import { apiLimiter } from './middleware/rateLimiter';
 import identityRoutes from './routes/identity.routes';
 import authRoutes from './routes/auth.routes';
 import availabilityRoutes from './routes/availability.routes';
+import appointmentV1Routes from './routes/appointment-v1.routes';
 import appointmentRoutes from './routes/appointment.routes';
 import healthRoutes from './routes/health.routes';
 import { errorHandler } from './utils/http';
@@ -28,6 +29,7 @@ app.use('/api/v1/identity/auth', authRoutes);
 app.use('/api/v1/identity', identityRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/v1/appointments', appointmentV1Routes);
 app.use('/api/health', healthRoutes);
 
 // Root route

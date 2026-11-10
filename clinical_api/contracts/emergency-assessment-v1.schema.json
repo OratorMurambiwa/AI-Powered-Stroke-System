@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:emergency-assessment:v1",
+  "title": "Patient-granted emergency intake; no appointment required",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "requestId",
+    "sourceId",
+    "patientId",
+    "patientMappingId",
+    "actorMappingId",
+    "intakeGrantId",
+    "reasonCode"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "requestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "sourceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "patientId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "patientMappingId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "actorMappingId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "intakeGrantId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reasonCode": {
+      "enum": [
+        "SUSPECTED_STROKE",
+        "URGENT_REASSESSMENT"
+      ]
+    }
+  }
+}

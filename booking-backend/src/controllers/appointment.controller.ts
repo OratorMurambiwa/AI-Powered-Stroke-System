@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import mongoose from 'mongoose';
 import { Appointment } from '../models/Appointment';
 import { Availability } from '../models/Availability';
@@ -7,7 +8,7 @@ import { assertActor } from '../services/identity.service';
 import { AuthRequest } from '../middleware/auth';
 import { fields, objectId, text, day, HttpError, route } from '../utils/http';
 
-export const createAppointment = route(async (req: AuthRequest, res) => {
+export async function bookAppointment(req: AuthRequest) {
   const body = fields(req.body, ['availabilityId', 'notes']);
   const availabilityId = objectId(body.availabilityId);
   const notes = body.notes === undefined ? undefined : text(body.notes, 2000);
@@ -25,14 +26,17 @@ export const createAppointment = route(async (req: AuthRequest, res) => {
     await User.updateOne({ _id: clinician._id }, { $inc: { authWriteVersion: 1 } }, { session });
     if (new Date(slot.date.toISOString().slice(0, 10) + 'T' + slot.startTime + ':00Z').getTime() <= Date.now()) throw new HttpError(409, 'Slot is in the past');
     const [created] = await Appointment.create([{
-      patientId: patient._id, patientName: patient.name, doctorId: slot.doctorId,
+      appointmentUuid: randomUUID(), patientId: patient._id, patientName: patient.name, doctorId: slot.doctorId,
       doctorName: slot.doctorName, availabilityId: slot._id, date: slot.date,
       startTime: slot.startTime, endTime: slot.endTime, status: 'confirmed', notes,
     }], { session });
     return created;
   });
   // No post-commit dependency can turn a persisted booking into an HTTP failure.
-  res.status(201).json({ appointment });
+  return appointment;
+}
+export const createAppointment = route(async (req: AuthRequest, res) => {
+  res.status(201).json({ appointment: await bookAppointment(req) });
 });
 export const getAppointments = route(async (req: AuthRequest, res) => {
   fields(req.query, ['status', 'date']);
@@ -47,20 +51,21 @@ export const getAppointments = route(async (req: AuthRequest, res) => {
   if (req.query.date !== undefined) query.date = day(req.query.date);
   res.json({ appointments: await Appointment.find(query).sort({ date: 1, startTime: 1 }).limit(200) });
 });
-export const cancelAppointment = route(async (req: AuthRequest, res) => {
+export async function cancelAppointmentRecord(req: AuthRequest) {
   const id = objectId(req.params.id);
   const appointment = await mongoose.connection.transaction(async session => {
     await assertActor(req.user!, session, ['patient', 'doctor']);
     const updated = await Appointment.findOneAndUpdate({
-      _id: id, status: 'confirmed', $or: [{ patientId: req.user!.id }, { doctorId: req.user!.id }],
+      _id: id, status: 'confirmed', assessmentRequestId: null, $or: [{ patientId: req.user!.id }, { doctorId: req.user!.id }],
     }, { $set: { status: 'cancelled' } }, { session, new: true });
     if (!updated) throw new HttpError(409, 'Appointment unavailable for cancellation');
     const slot = await Availability.findOneAndUpdate({ _id: updated.availabilityId, isBooked: true }, { $set: { isBooked: false } }, { session });
     if (!slot) throw new Error('Slot invariant failed');
     return updated;
   });
-  res.json({ appointment });
-});
+  return appointment;
+}
+export const cancelAppointment = route(async (req: AuthRequest, res) => { res.json({ appointment: await cancelAppointmentRecord(req) }); });
 
 export const getAppointment = route(async (req: AuthRequest, res) => {
   const id = objectId(req.params.id);

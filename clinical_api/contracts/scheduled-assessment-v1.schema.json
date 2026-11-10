@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:scheduled-assessment:v1",
+  "title": "Explicit reserved appointment assessment command",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "mode",
+    "requestId",
+    "appointmentId",
+    "encounterId",
+    "sourceId",
+    "patientId",
+    "patientMappingId",
+    "clinicianMappingId"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "mode": {
+      "const": "SCHEDULED"
+    },
+    "requestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "appointmentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "encounterId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "sourceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "patientId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "patientMappingId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "clinicianMappingId": {
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}

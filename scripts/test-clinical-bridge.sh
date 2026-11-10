@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Both runners share node_modules/dist; never allow overlapping dependency builds.
+command -v flock >/dev/null || { echo 'flock is required for isolated test serialization' >&2; exit 1; }
+exec 9>"$(git rev-parse --git-path stroke-backend-tests.lock)"
+flock -n 9 || { echo 'Another backend/clinical test runner is active; retry after it finishes' >&2; exit 1; }
 project="stroke-clinical-test-$(date +%s)-$$"
 mongo_image='mongo:8.0.17@sha256:9814652e33f0cf8b9fddea8b46dfc9d8e19b130dcfdd7b510ca58bb0d40c8b71'
 cleanup() {

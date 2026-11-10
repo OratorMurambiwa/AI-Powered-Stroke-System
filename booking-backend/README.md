@@ -1,4 +1,4 @@
-# Booking backend — shared identity authority (milestone 2A)
+# Booking and shared identity backend
 
 Adapted from [OratorMurambiwa/Hospital-booking-system](https://github.com/OratorMurambiwa/Hospital-booking-system/tree/2114faa0bc21eb759b7728eb0194867d679b9c70). The upstream repository is preserved. See [the integration plan](../docs/hospital-integration-plan.md) for the source audit, boundaries and follow-up work.
 
@@ -47,3 +47,7 @@ The Docker suite runs booking regressions and identity/recovery/CLI/concurrency 
 ## Clinical linkage extension (milestone 2B)
 
 The separate `/api/v1/identity/clinical-introspect` response adds a persisted role generation for the new synthetic clinical boundary; existing identity v1 response shapes remain unchanged. See [clinical linkage v1](../docs/clinical-linkage-v1.md). No existing account is migrated/linked by server startup. Full booking plus cross-language regressions run with `bash scripts/test-clinical-bridge.sh` from the repository root.
+
+## Appointment-to-assessment workflow (milestone 3)
+
+Versioned `/api/v1/appointments` routes add explicit new-booking UUIDs and assigned-doctor assessment intents. Configure the optional local `CLINICAL_API_URL` only with a fresh synthetic clinical store v2. Durable pending intents block cancellation until a known outcome; ordinary cancellation remains blocked after intake has created a record. Exact contracts, retries, emergency grants and limits are in [appointment/encounter v1](../docs/appointment-encounters-v1.md). No bearer token is persisted for background retries, no historical UUID is invented on read, and no existing scheduling/clinical data is migrated.

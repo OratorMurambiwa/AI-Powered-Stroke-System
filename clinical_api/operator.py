@@ -27,13 +27,16 @@ def main() -> None:
         if len(raw) > 4096:
             raise ValueError
         command = strict_json(raw)
-        if action in {"link", "assign"}:
+        if action in {"link", "assign", "grant_intake"}:
             if not sys.stdin.isatty():
                 raise ClinicalError(400, "private_terminal_required")
             token = getpass.getpass("Target person's live authority bearer token (hidden): ")
             result = getattr(manager, action)(command, "Bearer " + token, operator, reason)
         elif action in {"register_person", "register_encounter"}:
             result = getattr(manager, action)(command, operator, reason)
+        elif action == "revoke_intake":
+            manager.revoke_intake(command, operator, reason)
+            result = {"schemaVersion": 1, "status": "revoked"}
         elif action in {"revoke_link", "revoke_assignment"}:
             manager.revoke(command, operator, reason, assignment=action == "revoke_assignment")
             result = {"schemaVersion": 1, "status": "revoked"}

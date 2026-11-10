@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:assessment-state:v1",
+  "title": "Durable booking workflow state; CREATED is not clinical completion",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "requestId",
+    "appointmentId",
+    "encounterId",
+    "state",
+    "errorCode",
+    "retryable"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "requestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "appointmentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "encounterId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "state": {
+      "enum": [
+        "PENDING",
+        "CREATED",
+        "REJECTED"
+      ]
+    },
+    "errorCode": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "retryable": {
+      "type": "boolean"
+    }
+  }
+}

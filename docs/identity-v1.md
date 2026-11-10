@@ -96,3 +96,7 @@ Shared portal/clinical API, explicit patient linkage, clinical record ownership 
 The original `/introspect` and `/me` schemas above remain unchanged. New clinical consumers use `/api/v1/identity/clinical-introspect`, a separate closed v1 proof containing the same live principal plus `roleVersion`. Staff role changes/revocation advance that generation; ordinary password/session lifecycle operations do not. This prevents stale mappings/assignments from reviving after a role round trip, without binding durable linkage to one login session.
 
 [Clinical linkage v1](clinical-linkage-v1.md) defines the explicit synthetic-only record registry, local operator-approved mappings and encounter assignments. The new Python read paths validate live authority proofs and deny admins clinical data. No existing SQLite account or Streamlit session is linked automatically. The 2A statements above describe its original scope; 2B adds these isolated paths without integrating or migrating the legacy app.
+
+## Milestone 3 booking authorization
+
+[Appointment/encounter v1](appointment-encounters-v1.md) adds a separate live reservation proof for the assigned doctor, bound to appointment/request/command hash/session and current role generation. Identity proofs alone do not create clinical access. Emergency creation requires a local operator-approved patient intake grant; admin identity remains insufficient. Existing identity response shapes and session lifecycle are unchanged.

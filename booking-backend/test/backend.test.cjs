@@ -179,8 +179,8 @@ test('authentication, schedule and booking integration against real MongoDB', as
   });
   await t.test('unique index independently rejects duplicate confirmed appointments', async () => {
     const current = await Appointment.findOne({ availabilityId: bookedSlot._id, status: 'confirmed' }).lean();
-    const { _id, __v, ...copy } = current;
-    await assert.rejects(Appointment.create(copy), error => error.code === 11000);
+    const { _id, __v, appointmentUuid, ...copy } = current;
+    await assert.rejects(Appointment.create({ ...copy, appointmentUuid: crypto.randomUUID() }), error => error.code === 11000 && error.keyPattern?.availabilityId === 1);
   });
   await t.test('transaction rolls slot back if appointment persistence fails', async () => {
     resetLimits();

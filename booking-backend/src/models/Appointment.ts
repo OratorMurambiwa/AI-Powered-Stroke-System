@@ -1,6 +1,9 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IAppointment extends Document {
+  appointmentUuid?: string;
+  assessmentRequestId?: string;
+  encounterId?: string;
   patientId: mongoose.Types.ObjectId;
   patientName: string;
   doctorId: mongoose.Types.ObjectId;
@@ -17,6 +20,9 @@ export interface IAppointment extends Document {
 
 const appointmentSchema = new Schema<IAppointment>(
   {
+    appointmentUuid: { type: String, unique: true, sparse: true },
+    assessmentRequestId: String,
+    encounterId: String,
     patientId: {
       type: Schema.Types.ObjectId,
       ref: 'User',

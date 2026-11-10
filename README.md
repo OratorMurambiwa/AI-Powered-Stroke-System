@@ -283,3 +283,7 @@ Booking now owns new patient/doctor/technician/admin identities, revocable short
 ### Explicit clinical linkage (milestone 2B)
 
 [`clinical_api/`](clinical_api/README.md) adds isolated synthetic-only read paths with live identity introspection, explicit source/record UUID links and encounter-specific doctor/technician assignments. Admin tokens grant no clinical access. No existing records are imported or matched by name/email/patient code, and Streamlit remains separate. See [clinical linkage v1](docs/clinical-linkage-v1.md) and [2B verification](docs/hospital-milestone-2b-verification.md).
+
+### Booking-to-assessment workflow (milestone 3)
+
+Confirmed synthetic appointments now support durable, idempotent assessment intake through the separate Python service. Emergency intake requires an explicit patient-scoped staff grant. Clinical reads are audited before disclosure. [Appointment/encounter v1](docs/appointment-encounters-v1.md) documents contracts, conservative cancellation policy, partial-failure retries and new-store configuration; [Milestone 3 verification](docs/hospital-milestone-3-verification.md) records executed evidence. No historical store, Streamlit session or clinical model is integrated automatically.

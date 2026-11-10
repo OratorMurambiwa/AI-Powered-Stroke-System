@@ -29,13 +29,15 @@ export function times(start: unknown, end: unknown): { startTime: string; endTim
   if (!valid(start) || !valid(end) || start >= end) throw new HttpError(400, 'Invalid time interval');
   return { startTime: start, endTime: end };
 }
-export function errorHandler(error: unknown, _req: Request, res: Response, _next: NextFunction): void {
-  if (error instanceof HttpError) { res.status(error.status).json({ error: error.message }); return; }
+export function errorHandler(error: unknown, req: Request, res: Response, _next: NextFunction): void {
+  const versioned = req.originalUrl.startsWith('/api/v1/appointments');
+  const reply = (status: number, message: string) => res.status(status).json({ ...(versioned ? { schemaVersion: 1 } : {}), error: message });
+  if (error instanceof HttpError) { reply(error.status, error.message); return; }
   if (error instanceof mongoose.mongo.MongoServerError && error.code === 11000) {
-    res.status(409).json({ error: 'Resource already exists or slot is booked' }); return;
+    reply(409, versioned ? 'idempotency_or_reservation_conflict' : 'Resource already exists or slot is booked'); return;
   }
   if (error instanceof mongoose.Error.ValidationError || error instanceof SyntaxError) {
-    res.status(400).json({ error: 'Invalid request' }); return;
+    reply(400, versioned ? 'invalid_request' : 'Invalid request'); return;
   }
-  res.status(500).json({ error: 'Internal server error' });
+  reply(500, versioned ? 'internal_error' : 'Internal server error');
 }

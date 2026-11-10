@@ -11,7 +11,10 @@ def timestamp() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="microseconds")
 
 class LinkStore:
-    def __init__(self, path: Path, source_id: str):
+    def __init__(self, path: Path, source_id: str, version: int = 1):
+        if type(version) is not int or version not in {1, 2}:
+            raise ValueError("Explicit supported store version required")
+        self.version = version
         self.path = Path(path).resolve()
         self.source_id = uuid_id(source_id)
 
@@ -21,8 +24,8 @@ class LinkStore:
         os.close(descriptor)
         db = sqlite3.connect(self.path)
         try:
-            db.executescript(Path(__file__).with_name("schema.sql").read_text())
-            db.execute("INSERT INTO metadata VALUES(1,?)", (self.source_id,))
+            db.executescript(Path(__file__).with_name("schema.sql" if self.version == 1 else "schema-v2.sql").read_text())
+            db.execute("INSERT INTO metadata VALUES(?,?)", (self.version, self.source_id))
             db.commit()
         finally:
             db.close()
@@ -38,7 +41,7 @@ class LinkStore:
                 db.execute("PRAGMA query_only=ON")
             db.execute("BEGIN IMMEDIATE" if write else "BEGIN")
             metadata = db.execute("SELECT version,source_id FROM metadata").fetchall()
-            if len(metadata) != 1 or metadata[0]["version"] != 1 or metadata[0]["source_id"] != self.source_id:
+            if len(metadata) != 1 or metadata[0]["version"] != self.version or metadata[0]["source_id"] != self.source_id:
                 raise ClinicalError(503, "mapping_store_mismatch")
             yield db
             db.commit()

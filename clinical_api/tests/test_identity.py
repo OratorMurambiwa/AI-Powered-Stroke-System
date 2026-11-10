@@ -166,6 +166,21 @@ class ConfigurationTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 Config(path, path, str(uuid4()), 'http://127.0.0.1:1/api/v1/identity/clinical-introspect').service()
 
+    def test_v2_store_cannot_silently_adopt_or_overwrite_v1(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'new-synthetic-links.sqlite'
+            source_id=str(uuid4())
+            LinkStore(path,source_id).initialize()
+            original=hashlib.sha256(path.read_bytes()).hexdigest()
+            upgraded=LinkStore(path,source_id,2)
+            with self.assertRaises(FileExistsError):
+                upgraded.initialize()
+            with self.assertRaises(ClinicalError):
+                with upgraded.connection(write=True):
+                    pass
+            self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),original)
+
     def test_json_contract_parser_rejects_duplicate_or_nonfinite_fields(self):
         for raw in [b'{"schemaVersion":1,"schemaVersion":2}', b'{"x":NaN}']:
             with self.assertRaises(ValueError):
@@ -190,3 +205,51 @@ class OperatorBoundaryTests(unittest.TestCase):
                     main()
                 self.assertEqual(error.exception.code, 'private_terminal_required')
                 prompt.assert_not_called()
+
+class BookingProofTests(unittest.TestCase):
+    # Reuse only the local HTTP fixture, not its test methods.
+    setUp = IdentityTransportTests.setUp
+    tearDown = IdentityTransportTests.tearDown
+
+    def prepare(self):
+        from clinical_api.identity import Principal
+        from clinical_api.booking import BookingAdapter
+        self.appointment_id, self.request_id, self.encounter_id = str(uuid4()), str(uuid4()), str(uuid4())
+        self.command_hash = 'a' * 64
+        self.principal = Principal(ISSUER,self.subject,'doctor',self.sid,self.expiry,0)
+        self.body = {'schemaVersion':1,'issuer':ISSUER,'appointmentId':self.appointment_id,'requestId':self.request_id,
+                     'encounterId':self.encounter_id,'commandHash':self.command_hash,'patientSubject':'b'*24,'patientRoleVersion':0,
+                     'doctorSubject':self.subject,'doctorRoleVersion':0,'actorSubject':self.subject,'actorRoleVersion':0,
+                     'sessionId':self.sid,'status':'RESERVED','expiresAt':int(time.time())+60}
+        self.booking = BookingAdapter(self.adapter)
+
+    def proof(self):
+        return self.booking.proof('Bearer '+self.token,self.principal,self.appointment_id,self.request_id,self.command_hash,self.encounter_id)
+
+    def test_live_proof_binds_actor_command_and_exact_appointment(self):
+        self.prepare()
+        self.assertEqual(self.proof(),self.body)
+        self.assertEqual(self.requests[0][0],f'/api/v1/appointments/{self.appointment_id}/assessment-proof')
+        self.assertEqual(json.loads(self.requests[0][2]),{'schemaVersion':1,'requestId':self.request_id})
+
+    def test_malformed_stale_misbound_or_cancelled_proof_fails_closed(self):
+        self.prepare(); baseline=dict(self.body)
+        for field,value in [('schemaVersion',True),('issuer','wrong'),('status','cancelled'),('actorSubject','c'*24),
+                           ('patientSubject','invalid'),('doctorSubject','c'*24),('doctorRoleVersion',1),('actorRoleVersion',False),
+                           ('sessionId',str(uuid4())),('requestId',str(uuid4())),('encounterId',str(uuid4())),('commandHash','b'*64),
+                           ('expiresAt',int(time.time())-1),('expiresAt',int(time.time())+120),('extra','field')]:
+            self.body={**baseline,field:value}
+            with self.subTest(field=field), self.assertRaises(ClinicalError) as error:
+                self.proof()
+            self.assertEqual(error.exception.status,503)
+
+    def test_authority_rejection_outage_and_redirect_do_not_allow_creation(self):
+        self.prepare()
+        for status,expected in [(401,401),(403,401),(404,409),(409,409),(500,503),(307,503)]:
+            self.status=status
+            self.redirect=self.url+'/not-followed' if status==307 else None
+            with self.subTest(status=status), self.assertRaises(ClinicalError) as error:
+                self.proof()
+            self.assertEqual(error.exception.status,expected)
+        self.status=200;self.redirect=None
+        self.assertEqual(self.proof()['status'],'RESERVED')

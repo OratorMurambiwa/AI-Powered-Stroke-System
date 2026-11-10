@@ -1,6 +1,10 @@
-from wsgiref.simple_server import make_server, WSGIRequestHandler
+from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
+from socketserver import ThreadingMixIn
 from .config import Config
 from .app import ClinicalApplication
+
+class LocalClinicalServer(ThreadingMixIn, WSGIServer):
+    daemon_threads = True
 
 class PrivateHandler(WSGIRequestHandler):
     def log_message(self, *_args):
@@ -10,7 +14,7 @@ def main():
     service = Config.from_environment().service()
     with service.store.connection(), service.source.connection():
         pass
-    with make_server("127.0.0.1", 8010, ClinicalApplication(service), handler_class=PrivateHandler) as server:
+    with make_server("127.0.0.1", 8010, ClinicalApplication(service), handler_class=PrivateHandler, server_class=LocalClinicalServer) as server:
         server.serve_forever()
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 const crypto = require('node:crypto');
 const readline = require('node:readline');
 const { once } = require('node:events');
-if (!/^mongodb:\/\/stroke-booking-mongo:27017\/synthetic_clinical_identity\?replicaSet=rs0$/.test(process.env.MONGODB_URI || '')) throw new Error('Synthetic-only authority fixture');
+if (!/^mongodb:\/\/stroke-booking-mongo:27017\/(?:synthetic_clinical_identity|synthetic_workflow_identity)\?replicaSet=rs0$/.test(process.env.MONGODB_URI || '')) throw new Error('Synthetic-only authority fixture');
 process.env.JWT_SECRET = crypto.randomBytes(48).toString('hex');
 process.env.IDENTITY_DELIVERY_KEY = crypto.randomBytes(32).toString('hex');
 process.env.NODE_ENV = 'test';
@@ -45,6 +45,43 @@ async function listen(port = 0) {
       const jwt = require('jsonwebtoken');
       await IdentitySession.updateOne({ _id: jwt.decode(users[command.user].token).sid }, { $set: { expiresAt: new Date(Date.now() - 1000) } });
       process.stdout.write('{"status":"expired"}\n');
+    } else if (command.action === 'resetLimits') {
+      const limits = require('../dist/middleware/rateLimiter');
+      for (const limiter of Object.values(limits)) for (const key of ['127.0.0.1','::ffff:127.0.0.1','::/56']) limiter.resetKey(key);
+      process.stdout.write('{"status":"reset"}\n');
+    } else if (command.action === 'clinicalUrl') {
+      require('../dist/config').config.clinicalApiUrl = command.url;
+      process.stdout.write('{"status":"configured"}\n');
+    } else if (command.action === 'inspectWorkflow') {
+      const { AssessmentRequest } = require('../dist/models/AssessmentRequest');
+      const { Appointment } = require('../dist/models/Appointment');
+      const record = await AssessmentRequest.findById(command.requestId).lean();
+      process.stdout.write(JSON.stringify({ state: record?.state ?? null, attempts: record?.attempts ?? 0, blocking: record?.blocking ?? null,
+        reservations: await Appointment.countDocuments({ assessmentRequestId: command.requestId }) }) + '\n');
+    } else if (command.action === 'expireLease') {
+      await require('../dist/models/AssessmentRequest').AssessmentRequest.updateOne({ _id: command.requestId }, { $set: { leaseUntil: new Date(0) } });
+      process.stdout.write('{"status":"lease_expired"}\n');
+    } else if (command.action === 'appointmentStatus') {
+      await require('../dist/models/Appointment').Appointment.updateOne({ appointmentUuid: command.appointmentId }, { $set: { status: command.status } });
+      process.stdout.write('{"status":"fixture_updated"}\n');
+    } else if (command.action === 'failFinalize') {
+      // One-shot test-only seam around Mongo acknowledgement, not a runtime option.
+      const { AssessmentRequest } = require('../dist/models/AssessmentRequest');
+      if (command.kind === 'appointment') {
+        const { Appointment } = require('../dist/models/Appointment');
+        const original = Appointment.updateOne;
+        Appointment.updateOne = function (filter, update, options) {
+          if (update?.$set?.encounterId) { Appointment.updateOne = original; return Promise.resolve({ matchedCount: 0 }); }
+          return original.call(this, filter, update, options);
+        };
+      } else {
+        const original = AssessmentRequest.findOneAndUpdate;
+        AssessmentRequest.findOneAndUpdate = function (filter, update, options) {
+          if (update?.$set?.state === 'CREATED') { AssessmentRequest.findOneAndUpdate = original; throw new Error('Synthetic acknowledgement failure'); }
+          return original.call(this, filter, update, options);
+        };
+      }
+      process.stdout.write('{"status":"armed"}\n');
     } else if (command.action === 'stop') break;
     else throw new Error('Unknown synthetic fixture command');
   }

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:appointment:v1",
+  "title": "Owned scheduling appointment v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "appointmentId",
+    "patientSubject",
+    "doctorSubject",
+    "date",
+    "startTime",
+    "endTime",
+    "status",
+    "assessmentRequestId",
+    "encounterId"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "appointmentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "patientSubject": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{24}$"
+    },
+    "doctorSubject": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{24}$"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "startTime": {
+      "type": "string",
+      "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+    },
+    "endTime": {
+      "type": "string",
+      "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+    },
+    "status": {
+      "enum": [
+        "confirmed",
+        "cancelled",
+        "completed"
+      ]
+    },
+    "assessmentRequestId": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "encounterId": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  }
+}

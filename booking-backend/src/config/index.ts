@@ -8,6 +8,7 @@ if (deliveryKey === secret) throw new Error('Identity signing and delivery keys 
 const ttl = Number(process.env.JWT_TTL_SECONDS || 900);
 if (!Number.isInteger(ttl) || ttl < 60 || ttl > 900) throw new Error('JWT_TTL_SECONDS must be an integer from 60 to 900');
 export const config = {
+  clinicalApiUrl: process.env.CLINICAL_API_URL,
   port: Number(process.env.PORT || 3000),
   nodeEnv: process.env.NODE_ENV || 'development',
   mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hospital-booking?replicaSet=rs0',
