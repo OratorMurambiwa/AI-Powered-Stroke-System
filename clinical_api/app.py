@@ -4,13 +4,15 @@ from .errors import ClinicalError
 from .service import ClinicalService
 from .assessment import AssessmentService
 from .workflow import ReviewWorkflow
+from .predictions import PredictionService
 from .validation import strict_json
 
 class ClinicalApplication:
     def __init__(self, service: ClinicalService):
         self.service = service
         self.assessments = AssessmentService(service) if service.store.version >= 2 else None
-        self.workflow = ReviewWorkflow(service) if service.store.version == 3 else None
+        self.workflow = ReviewWorkflow(service) if service.store.version >= 3 else None
+        self.predictions = PredictionService(service) if service.store.version == 4 else None
 
     def __call__(self, environ, start_response):
         status = 200
@@ -22,6 +24,8 @@ class ClinicalApplication:
             method = environ.get("REQUEST_METHOD")
             workflow_match = re.fullmatch(r"/api/v1/clinical/encounters/([^/]+)/assessment", path) if self.workflow else None
             scan_match = re.fullmatch(r"/api/v1/clinical/encounters/([^/]+)/scans/([^/]+)", path) if self.workflow else None
+            prediction_match = re.fullmatch(r"/api/v1/clinical/encounters/([^/]+)/predictions", path) if self.predictions else None
+            review_match = re.fullmatch(r"/api/v1/clinical/encounters/([^/]+)/predictions/([^/]+)/review", path) if self.predictions else None
             if method == "GET" and scan_match:
                 raw = self.workflow.scan(bearer, scan_match[1], scan_match[2])
                 start_response('200 OK', [('Content-Type','image/png'),('Content-Length',str(len(raw))),
@@ -29,7 +33,14 @@ class ClinicalApplication:
                     ('Cache-Control','no-store'),('X-Content-Type-Options','nosniff'),
                     ('Content-Security-Policy',"default-src 'none'; sandbox")])
                 return [raw]
-            if method == "GET" and workflow_match:
+            if method == 'POST' and prediction_match:
+                result = self.predictions.create(bearer, prediction_match[1], self._body(environ,8192))
+                status = 202 if result['state']=='PENDING' else 200
+            elif method == 'GET' and prediction_match:
+                result = self.predictions.read(bearer, prediction_match[1])
+            elif method == 'POST' and review_match:
+                result = self.predictions.review(bearer, review_match[1], review_match[2], self._body(environ,8192))
+            elif method == "GET" and workflow_match:
                 result = self.workflow.read(bearer, workflow_match[1])
             elif method == "POST" and workflow_match:
                 command = self._body(environ, 1400000)

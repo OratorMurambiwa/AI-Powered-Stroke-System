@@ -1,0 +1,508 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:experimental-predictions:v1",
+  "title": "Separate experimental classifier records; never patient-visible diagnoses",
+  "$ref": "#/$defs/record",
+  "$defs": {
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "scanId"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "scanId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "predictionId",
+        "encounterId",
+        "scanId",
+        "requestedAt",
+        "completedAt",
+        "requestedBy",
+        "mappingId",
+        "roleVersion",
+        "predictedClass",
+        "rawScore",
+        "scores",
+        "modelSha256",
+        "modelVersion",
+        "preprocessingVersion",
+        "scanSha256",
+        "durationMs",
+        "experimental",
+        "clinicianReviewRequired",
+        "patientVisible"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "predictionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "encounterId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "scanId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "requestedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "requestedBy": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{24}$"
+        },
+        "mappingId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "roleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "predictedClass": {
+          "enum": [
+            "bleeding",
+            "ischemia",
+            "normal"
+          ]
+        },
+        "rawScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "scores": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "description": "Order: bleeding, ischemia, normal. Softmax outputs, not calibrated clinical confidence."
+        },
+        "modelSha256": {
+          "const": "200f5ab52415cb96dae577a45b5d1cb8a6dedb2cbab03c32885d826553d0d595"
+        },
+        "modelVersion": {
+          "const": "medstroke-checkpoint-2025-10-27-ultralytics-8.3.221"
+        },
+        "preprocessingVersion": {
+          "const": "rgb-resize-short224-bilinear-centercrop224-tensor01-v1"
+        },
+        "scanSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20000
+        },
+        "experimental": {
+          "const": true
+        },
+        "clinicianReviewRequired": {
+          "const": true
+        },
+        "patientVisible": {
+          "const": false
+        }
+      }
+    },
+    "jobReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "predictionId",
+        "encounterId",
+        "scanId",
+        "state",
+        "attempts",
+        "errorCode",
+        "prediction",
+        "experimental",
+        "clinicianReviewRequired",
+        "patientVisible"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "predictionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "encounterId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "scanId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "enum": [
+            "PENDING",
+            "SUCCEEDED",
+            "FAILED"
+          ]
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "errorCode": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "prediction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/record"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "experimental": {
+          "const": true
+        },
+        "clinicianReviewRequired": {
+          "const": true
+        },
+        "patientVisible": {
+          "const": false
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "SUCCEEDED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "prediction": {
+                "$ref": "#/$defs/record"
+              },
+              "errorCode": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "prediction": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "reviewCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "expectedReviewVersion",
+        "decision",
+        "note",
+        "attested"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expectedReviewVersion": {
+          "const": 0
+        },
+        "decision": {
+          "enum": [
+            "ACKNOWLEDGED",
+            "DISMISSED"
+          ]
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "attested": {
+          "const": true
+        }
+      }
+    },
+    "reviewReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "predictionId",
+        "reviewVersion",
+        "decision",
+        "note",
+        "reviewedBy",
+        "mappingId",
+        "roleVersion",
+        "reviewedAt",
+        "attested",
+        "experimental",
+        "patientVisible",
+        "diagnosisApproved"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "predictionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "reviewVersion": {
+          "const": 1
+        },
+        "decision": {
+          "enum": [
+            "ACKNOWLEDGED",
+            "DISMISSED"
+          ]
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "reviewedBy": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{24}$"
+        },
+        "mappingId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "roleVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reviewedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "attested": {
+          "const": true
+        },
+        "experimental": {
+          "const": true
+        },
+        "patientVisible": {
+          "const": false
+        },
+        "diagnosisApproved": {
+          "const": false
+        }
+      }
+    },
+    "reviewedJob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "requestId",
+        "predictionId",
+        "encounterId",
+        "scanId",
+        "state",
+        "attempts",
+        "errorCode",
+        "prediction",
+        "experimental",
+        "clinicianReviewRequired",
+        "patientVisible",
+        "review"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "predictionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "encounterId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "scanId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "enum": [
+            "PENDING",
+            "SUCCEEDED",
+            "FAILED"
+          ]
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "errorCode": {
+          "type": [
+            "null",
+            "string"
+          ]
+        },
+        "prediction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/record"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "experimental": {
+          "const": true
+        },
+        "clinicianReviewRequired": {
+          "const": true
+        },
+        "patientVisible": {
+          "const": false
+        },
+        "review": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/reviewReceipt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "SUCCEEDED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "prediction": {
+                "$ref": "#/$defs/record"
+              },
+              "errorCode": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "prediction": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "list": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "encounterId",
+        "predictions",
+        "experimental",
+        "patientVisible"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "encounterId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "predictions": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/reviewedJob"
+          }
+        },
+        "experimental": {
+          "const": true
+        },
+        "patientVisible": {
+          "const": false
+        }
+      }
+    }
+  }
+}

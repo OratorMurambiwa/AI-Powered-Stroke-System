@@ -92,7 +92,7 @@ class ClinicalService:
                     raise ClinicalError(503, "clinical_record_unavailable")
                 detail = {"mode": row['mode'], "appointmentId": row['appointment_id'], "status": row['status'], "reasonCode": row['reason_code'], "createdAt": row['created_at']}
             else:
-                detail = {"status": "LEGACY_RESULT_UNAVAILABLE"} if self.store.version == 3 and principal.role == "patient" else self.source.encounter(encounter["native_id"], person["native_id"], target, person["id"])
+                detail = {"status": "LEGACY_RESULT_UNAVAILABLE"} if self.store.version >= 3 and principal.role == "patient" else self.source.encounter(encounter["native_id"], person["native_id"], target, person["id"])
             return {"schemaVersion": 1, "encounterId": target, "patientId": person["id"],
                     "encounter": detail, "experimental": True, "clinicianReviewRequired": True}
         return self._audited(bearer, encounter_id, "encounter", read)

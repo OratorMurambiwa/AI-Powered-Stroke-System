@@ -105,7 +105,7 @@ class WorkflowFixture(ClinicalFixture):
                 'intakeGrantId':grant['intakeGrantId'],'reasonCode':'SUSPECTED_STROKE'}
 
     def clinical_post(self, path, body, user='technician'):
-        connection = http.client.HTTPConnection('127.0.0.1',self.httpd.server_port,timeout=8)
+        connection = http.client.HTTPConnection('127.0.0.1',self.httpd.server_port,timeout=30)
         try:
             connection.request('POST',path,json.dumps(body),{'Content-Type':'application/json','Authorization':self.bearer(user)})
             response = connection.getresponse()

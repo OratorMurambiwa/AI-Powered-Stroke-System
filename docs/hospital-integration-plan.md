@@ -59,6 +59,10 @@ Original source stores remain read-only; there is no in-place v1 upgrade or hist
 
 The explicitly initialized v3 clinical store extends scheduled/emergency encounters with attributed vitals/NIHSS observations, private bounded PNG blobs, internal doctor notes and revisioned submit/approve/reject actions. SQLite atomically commits immutable request receipts, snapshots, provenance and mutation audits. Live authority/assignment checks protect every action and download; patients receive only their own immutable clinician-approved projection. No ML/treatment/hosted AI or legacy login path is enabled. v1/v2 stores and original sources are not upgraded/adopted. See [assessment workflow v1](assessment-workflow-v1.md) and [4A verification](hospital-milestone-4a-verification.md).
 
+## Milestone 4B — isolated experimental CPU classifier
+
+After an explicit user trust confirmation for the existing checkpoint hash, non-executing artifact/loader audit and actual networkless CPU verification, a separate restricted worker serves only the pinned MedStroke artifact. Opt-in fresh clinical store v4 records doctor-requested private-scan predictions with model/input digests, preprocessing version, raw scores, timestamps, durable fenced retries and audit. Doctor acknowledgement/dismissal remains separate from observations and immutable approved findings; predictions are never patient-visible and drive no tPA/treatment decisions. Training/accuracy provenance remains unverified. See [artifact audit](experimental-models/medstroke-audit.md), [prediction v1](experimental-predictions-v1.md) and [4B results](hospital-milestone-4b-verification.md).
+
 ## Subsequent integration milestones
 
 ### 2C. Approved clinical adoption and production identity hardening
@@ -73,7 +77,7 @@ Milestone 3 implements versioned appointment/intake/receipt contracts, explicit 
 
 Keep Mongo scheduling and SQLite clinical data separate initially behind narrow APIs. Do not make cross-database writes appear atomic. Use an outbox/idempotent consumer if encounters or notifications later span services. Existing standalone MongoDB data would require an explicit replica-set/index preflight; do not point this milestone at such data.
 
-### 4B. Unified portal and future experimental clinical boundary
+### 4C. Unified portal and clinical validation boundary
 
 Build the shared patient/staff portal after contracts and identity are agreed. Do not treat booking JWTs as Streamlit authentication automatically. Milestone 4A supplies synthetic server-side observations, private PNG delivery and audited human review; a shared frontend and approved real-source adoption are still required. Add structured provenance (model/version, inputs, time, uncertainty) and distinct generated-draft versus clinician-approved treatment fields. Keep explicit experimental labeling, clinician attestation and no autonomous treatment execution. Consolidate the duplicate hosted generation paths, default external generation off, and evaluate any local model separately on synthetic/de-identified approved evaluation data. Model percentages must not be advertised as validated clinical confidence.
 

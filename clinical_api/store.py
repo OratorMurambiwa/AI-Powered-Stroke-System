@@ -12,7 +12,7 @@ def timestamp() -> str:
 
 class LinkStore:
     def __init__(self, path: Path, source_id: str, version: int = 1):
-        if type(version) is not int or version not in {1, 2, 3}:
+        if type(version) is not int or version not in {1, 2, 3, 4}:
             raise ValueError("Explicit supported store version required")
         self.version = version
         self.path = Path(path).resolve()
