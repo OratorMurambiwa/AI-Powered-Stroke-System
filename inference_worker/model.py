@@ -9,13 +9,17 @@ MODEL_VERSION = 'medstroke-checkpoint-2025-10-27-ultralytics-8.3.221'
 PREPROCESS_VERSION = 'rgb-resize-short224-bilinear-centercrop224-tensor01-v1'
 LABELS = {0:'bleeding',1:'ischemia',2:'normal'}
 
-def load():
+def verified_bytes():
     path = Path('/artifact/MedStroke.pt')
     descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
     with os.fdopen(descriptor,'rb') as stream:
         raw = stream.read(3000001)
     if len(raw) != 2966344 or hashlib.sha256(raw).hexdigest() != MODEL_SHA256:
         raise ValueError('model_fingerprint_mismatch')
+    return raw
+
+def load(threads=2):
+    raw=verified_bytes()
     import torch
     from torch import nn
     from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize, InterpolationMode
@@ -29,17 +33,18 @@ def load():
     model = checkpoint['model']
     if type(model) is not ClassificationModel or checkpoint['version'] != '8.3.221' or model.names != LABELS:
         raise ValueError('model_metadata_mismatch')
-    torch.set_num_threads(2)
+    torch.set_num_threads(threads)
     torch.set_num_interop_threads(1)
     return model.float().cpu().eval()
 
-def predict(raw):
+def predict(raw, model=None):
     from clinical_api.png import validate_png
     validate_png(raw)
     import torch
     from PIL import Image
     from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, InterpolationMode
-    model = load()
+    if model is None: model=load()
+    else: verified_bytes()
     image = Image.open(io.BytesIO(raw)).convert('RGB')
     tensor = Compose([Resize(224,interpolation=InterpolationMode.BILINEAR,antialias=True),CenterCrop(224),ToTensor()])(image).unsqueeze(0)
     with torch.inference_mode():

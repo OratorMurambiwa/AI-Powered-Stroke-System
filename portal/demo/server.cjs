@@ -11,6 +11,8 @@ if (
   throw Error("Explicit isolated synthetic fixture required");
 process.env.JWT_SECRET = crypto.randomBytes(48).toString("hex");
 process.env.IDENTITY_DELIVERY_KEY = crypto.randomBytes(32).toString("hex");
+process.env.CLINICAL_API_URL =
+  "http://127.0.0.1:8010/api/v1/clinical/assessment-requests";
 process.env.NODE_ENV = "test";
 process.env.RATE_LIMIT_MAX_REQUESTS = "10000";
 const app = require("../../booking-backend/dist/app").default;
@@ -87,6 +89,93 @@ async function listen() {
     JSON.stringify({ users, date }),
     { mode: 0o600 },
   );
+  const { spawn } = require("node:child_process");
+  const { createInterface } = require("node:readline");
+  const clinical = spawn("python3", ["portal/demo/clinical.py"], {
+    cwd: "/repo",
+    env: {
+      ...process.env,
+      CLINICAL_INFERENCE_URL:
+        "http://stroke-inference-worker:8020/api/v1/predict",
+    },
+    stdio: ["pipe", "pipe", "ignore"],
+  });
+  const replies = new Map();
+  let readyResolve, readyReject;
+  const clinicalReady = new Promise((resolve, reject) => {
+    readyResolve = resolve;
+    readyReject = reject;
+  });
+  const readyTimeout = setTimeout(
+    () => readyReject(Error("Clinical bootstrap deadline")),
+    30000,
+  );
+  createInterface({ input: clinical.stdout }).on("line", (line) => {
+    const result = JSON.parse(line);
+    if (result.ready) {
+      clearTimeout(readyTimeout);
+      readyResolve();
+    } else {
+      const callback = replies.get(result.id);
+      if (callback) {
+        replies.delete(result.id);
+        callback(result);
+      }
+    }
+  });
+  clinical.on("exit", () => {
+    clearTimeout(readyTimeout);
+    readyReject(Error("Clinical child exited"));
+  });
+  const identities = {};
+  async function loginFixture(name) {
+    const response = await fetch(
+      `http://127.0.0.1:${apiPort}/api/v1/identity/auth/login`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(users[name], ["email", "password"]),
+      },
+    );
+    if (!response.ok) throw Error("Private fixture login failed");
+    return await response.json();
+  }
+  for (const name of ["patient", "otherPatient", "doctor", "technician"]) {
+    const proof = await loginFixture(name);
+    identities[name] = {
+      subject: users[name].id,
+      bearer: "Bearer " + proof.token,
+    };
+  }
+  clinical.stdin.write(
+    JSON.stringify({
+      authority: `http://127.0.0.1:${apiPort}/api/v1/identity/clinical-introspect`,
+      identities,
+    }) + "\n",
+  );
+  await clinicalReady;
+  for (const value of Object.values(identities)) {
+    await fetch(`http://127.0.0.1:${apiPort}/api/v1/identity/auth/logout`, {
+      method: "POST",
+      headers: { Authorization: value.bearer },
+      signal: AbortSignal.timeout(3000),
+    });
+  }
+  for (const name of Object.keys(identities)) delete identities[name];
+
+  const callClinical = (command) =>
+    new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        replies.delete(command.id);
+        reject(Error("Private operator deadline"));
+      }, 15000);
+      replies.set(command.id, (result) => {
+        clearTimeout(timer);
+        if (result.ok) resolve(result.result);
+        else reject(Error("Private operator refused"));
+      });
+      clinical.stdin.write(JSON.stringify(command) + "\n");
+    });
   const root = path.resolve(__dirname, "../dist");
   const gateway = http.createServer((req, res) => {
     const headers = {
@@ -100,17 +189,21 @@ async function listen() {
       const upstream = http.request(
         {
           hostname: "127.0.0.1",
-          port: apiPort,
+          port: req.url.startsWith("/api/v1/clinical/") ? 8010 : apiPort,
           path: req.url,
           method: req.method,
           headers: { ...req.headers, host: "127.0.0.1:" + apiPort },
         },
         (reply) => {
-          res.writeHead(reply.statusCode, { ...reply.headers, ...headers });
+          const responseHeaders = { ...reply.headers, ...headers };
+          if (reply.headers["content-security-policy"])
+            responseHeaders["Content-Security-Policy"] =
+              reply.headers["content-security-policy"];
+          res.writeHead(reply.statusCode, responseHeaders);
           reply.pipe(res);
         },
       );
-      upstream.setTimeout(10000, () => upstream.destroy());
+      upstream.setTimeout(40000, () => upstream.destroy());
       upstream.on("error", () => {
         if (!res.headersSent)
           res.writeHead(503, {
@@ -179,10 +272,43 @@ async function listen() {
       else if (command.action === "pause")
         await new Promise((r) => api.close(r));
       else if (command.action === "resume") await listen();
-      else throw Error("Unknown private fixture control");
+      else if (command.action === "assign") {
+        const proof = await loginFixture("technician");
+        await callClinical({
+          id: command.id,
+          action: "assign",
+          encounterId: command.encounterId,
+          bearer: "Bearer " + proof.token,
+        });
+      } else if (["pauseClinical", "resumeClinical"].includes(command.action))
+        await callClinical(command);
+      else if (command.action === "deliver") {
+        if (command.verified !== "HANDOFF")
+          throw Error("Explicit verified handoff required");
+        const {
+          consumeDelivery,
+        } = require("../../booking-backend/dist/services/identity.service");
+        if (fs.existsSync(path.join(privateDir, "delivery-once.json")))
+          throw Error("Prior handoff needs operator review");
+        const payload = await consumeDelivery(
+          command.deliveryId,
+          command.operator || "synthetic-private-operator",
+        );
+        fs.writeFileSync(
+          path.join(privateDir, "delivery-once.json"),
+          JSON.stringify(payload),
+          { mode: 0o600, flag: "wx" },
+        );
+      } else throw Error("Unknown private fixture control");
       fs.writeFileSync(
         path.join(privateDir, "control-ack.json"),
         JSON.stringify({ id: command.id }),
+        { mode: 0o600 },
+      );
+    } catch {
+      fs.writeFileSync(
+        path.join(privateDir, "control-ack.json"),
+        JSON.stringify({ id: "failed" }),
         { mode: 0o600 },
       );
     } finally {

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 import { fields, objectId, route } from '../utils/http';
 import { provisionStaff, changeStaff } from '../services/identity.service';
+import { User } from '../models/User';
 import { IdentityAudit, IdentitySession } from '../models/Identity';
 const router = Router();
 router.use((_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
@@ -26,6 +27,10 @@ router.post('/clinical-introspect', (req: AuthRequest, res, next) => {
 router.get('/sessions', route(async (req: AuthRequest, res) => {
   res.json({ schemaVersion: 1, sessions: await IdentitySession.find({ userId: req.user!.id, revokedAt: null,
     expiresAt: { $gt: new Date() } }).select('_id issuedAt expiresAt').limit(100) });
+}));
+router.get('/staff', authorize('admin'), route(async (_req, res) => {
+  const users = await User.find({ role: { $in: ['doctor', 'physician', 'technician', 'admin'] } }).select('_id name email role state').sort({ _id: 1 }).limit(100);
+  res.json({ schemaVersion: 1, limit: 100, staff: users.map(u => ({ id: u.id, name: u.name, email: u.email, role: u.role === 'physician' ? 'doctor' : u.role, state: u.state ?? 'active' })) });
 }));
 router.get('/staff/:id/audit', authorize('admin'), route(async (req, res) => {
   const id = objectId(req.params.id);

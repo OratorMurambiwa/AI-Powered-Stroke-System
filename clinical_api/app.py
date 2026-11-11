@@ -50,6 +50,10 @@ class ClinicalApplication:
                 result = self.assessments.scheduled(bearer, command) if path.endswith('/assessment-requests') else self.assessments.emergency(bearer, command)
             elif method != "GET":
                 raise ClinicalError(405, "method_not_allowed")
+            elif self.workflow and path == '/api/v1/clinical/workspace':
+                result = self.service.workspace(bearer)
+            elif self.workflow and (match := re.fullmatch(r'/api/v1/clinical/appointment-context/([^/]+)',path)):
+                result = self.service.appointment_context(bearer,match[1])
             elif path == "/health":
                 with self.service.store.connection(), self.service.source.connection():
                     result = {"schemaVersion": 1, "status": "ready"}

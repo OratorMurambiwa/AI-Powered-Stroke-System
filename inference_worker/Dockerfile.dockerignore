@@ -5,6 +5,7 @@ inference_worker/**
 !inference_worker/model.py
 !inference_worker/probe.py
 !inference_worker/server.py
+!inference_worker/pool.py
 !inference_worker/requirements.txt
 !inference_worker/requirements.lock
 !inference_worker/README.md

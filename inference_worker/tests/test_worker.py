@@ -28,5 +28,15 @@ class RealCpuWorker(unittest.TestCase):
 
     def test_actual_child_deadline_kills_job_and_next_job_can_run(self):
         with self.assertRaisesRegex(RuntimeError,'inference_deadline'):
-            run_job(synthetic(),timeout=0.1)
+            run_job(synthetic(),timeout=0.001)
         self.assertEqual(run_job(synthetic())['modelSha256'],MODEL_SHA256)
+
+    def test_child_offline_environment_does_not_forward_service_credentials(self):
+        import os
+        from unittest.mock import patch
+        from inference_worker.server import child_environment
+        with patch.dict(os.environ,{'JWT_SECRET':'synthetic-private','INFERENCE_SERVICE_KEY':'synthetic-private','HTTP_PROXY':'synthetic-proxy'}):
+            environment=child_environment()
+        self.assertEqual(environment['YOLO_OFFLINE'],'true')
+        for key in ['JWT_SECRET','INFERENCE_SERVICE_KEY','HTTP_PROXY']:
+            self.assertNotIn(key,environment)

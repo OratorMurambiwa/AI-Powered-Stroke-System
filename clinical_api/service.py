@@ -96,3 +96,45 @@ class ClinicalService:
             return {"schemaVersion": 1, "encounterId": target, "patientId": person["id"],
                     "encounter": detail, "experimental": True, "clinicianReviewRequired": True}
         return self._audited(bearer, encounter_id, "encounter", read)
+
+    def workspace(self, bearer: str | None) -> dict:
+        """Discovery applies the same current link/assignment/approval policy as detail."""
+        def read(db, principal, _target):
+            link=self._link(db,principal)
+            base="""SELECT e.id,e.patient_id,r.mode,r.appointment_id,COALESCE(w.state,'DRAFT') state,COALESCE(w.version,0) version
+                    FROM encounters e JOIN assessment_records r ON r.id=e.id
+                    LEFT JOIN assessment_workflows w ON w.encounter_id=e.id """
+            if principal.role=='patient':
+                rows=db.execute(base+" WHERE e.patient_id=? AND w.state='APPROVED' ORDER BY e.created_at DESC LIMIT 100",(link['person_id'],)).fetchall()
+            else:
+                rows=db.execute(base+" JOIN assignments a ON a.encounter_id=e.id WHERE a.link_id=? AND a.revoked_at IS NULL ORDER BY e.created_at DESC LIMIT 100",(link['id'],)).fetchall()
+            return {'schemaVersion':1,'sourceId':self.source.source_id,'limit':100,'encounters':[
+                {'encounterId':r['id'],'patientId':r['patient_id'],'mode':r['mode'],'appointmentId':r['appointment_id'],'state':r['state'],'version':r['version']} for r in rows]}
+        return self._audited(bearer,self.source.source_id,'workspace',read)
+
+    def appointment_context(self, bearer: str | None, appointment_id: str) -> dict:
+        from .booking import BookingAdapter
+        # Do not hold SQLite's write lock during the live authority callback.
+        def authorize(db,principal,_target):
+            self._link(db,principal)
+            if principal.role!='doctor': raise ClinicalError(403,'assigned_doctor_required')
+            return principal
+        actor=self._audited(bearer,appointment_id,'appointment_context_authorize',authorize)
+        try:
+            proof=BookingAdapter(self.identity).owned(bearer,actor,appointment_id)
+        except ClinicalError as error:
+            def failed(_db,_principal,_target): raise error
+            return self._audited(bearer,appointment_id,'appointment_context_failure',failed)
+        def read(db,principal,target):
+            clinician=self._link(db,principal)
+            if principal.role!='doctor': raise ClinicalError(403,'assigned_doctor_required')
+            if principal.subject!=actor.subject or principal.session_id!=actor.session_id or proof is None:
+                raise ClinicalError(401,'invalid_session')
+            patient=db.execute("SELECT * FROM identity_links WHERE issuer=? AND subject=? AND role='patient' AND revoked_at IS NULL",(principal.issuer,proof['patientSubject'])).fetchone()
+            if not patient: raise ClinicalError(409,'explicit_patient_mapping_required')
+            person=db.execute('SELECT * FROM people WHERE id=?',(patient['person_id'],)).fetchone()
+            if not person or self.source.check_person('patient',person['native_id'])!=patient['person_id']:
+                raise ClinicalError(503,'record_identity_mismatch')
+            return {'schemaVersion':1,'appointmentId':target,'sourceId':self.source.source_id,'patientId':patient['person_id'],
+                    'patientMappingId':patient['id'],'clinicianMappingId':clinician['id']}
+        return self._audited(bearer,appointment_id,'appointment_context',read)

@@ -142,6 +142,13 @@ test('shared identity authority against synthetic real MongoDB', async t => {
     assert.equal((await api('post', '/api/availability', technician).send({ date: '2099-07-01', startTime: '10:00', endTime: '11:00' })).status, 403);
     for (const actor of [admin, technician]) assert.equal((await api('get', '/api/appointments', actor)).status, 403);
   });
+  await t.test('staff directory is admin-only and excludes security material', async () => {
+    for (const actor of [patient, doctor, technician]) assert.equal((await api('get', prefix + '/staff', actor)).status, 403);
+    const response = await api('get', prefix + '/staff', admin);
+    assert.equal(response.status, 200);
+    assert.ok(response.body.staff.length > 0);
+    for (const row of response.body.staff) assert.deepEqual(Object.keys(row).sort(), ['email','id','name','role','state']);
+  });
   await t.test('provisioning validates role/reason/reauth and cannot promote an email-matched patient', async () => {
     for (const change of [{ role: 'patient' }, { role: 'root' }, { reason: '' }, { currentPassword: 'wrong' }, { password: secret }]) {
       const result = await api('post', prefix + '/staff', admin).send({ email: `invalid-${++sequence}@example.test`, name: 'Synthetic', role: 'doctor', reason: 'SYNTHETIC', currentPassword: secret, ...change });

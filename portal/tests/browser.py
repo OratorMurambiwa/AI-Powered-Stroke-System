@@ -5,7 +5,7 @@ from datetime import datetime,timedelta,timezone
 from playwright.sync_api import sync_playwright,expect
 
 ROOT=Path('/demo-private');FIXTURE=json.loads((ROOT/'credentials.json').read_text());URL=os.environ['PORTAL_TEST_URL']
-class PortalBrowser(unittest.TestCase):
+class BrowserFixture(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.play=sync_playwright().start();cls.browser=cls.play.chromium.launch(headless=True);print('Browser runtime: Chromium '+cls.browser.version,flush=True)
@@ -25,8 +25,8 @@ class PortalBrowser(unittest.TestCase):
         page.get_by_label('Email address').fill(account['email']);page.get_by_label('Password',exact=True).fill(account['password']);page.get_by_role('button',name='Sign in',exact=True).click()
         expect(page.get_by_role('button',name='Sign out',exact=True)).to_be_visible()
         if role in {'patient','otherPatient','doctor'}:expect(page.get_by_role('button',name='Refresh records')).to_be_enabled()
-    def control(self,action):
-        command={'id':str(uuid.uuid4()),'action':action};temp=ROOT/'control-next.json';temp.write_text(json.dumps(command));temp.replace(ROOT/'control.json')
+    def control(self,action,**fields):
+        command={'id':str(uuid.uuid4()),'action':action,**fields};temp=ROOT/'control-next.json';temp.write_text(json.dumps(command));temp.replace(ROOT/'control.json')
         for _ in range(100):
             try:
                 if json.loads((ROOT/'control-ack.json').read_text())['id']==command['id']:return
@@ -42,6 +42,7 @@ class PortalBrowser(unittest.TestCase):
         page=page or self.page
         row=page.locator('.appointment').filter(has=page.get_by_text('confirmed',exact=True)).first
         row.get_by_role('button',name='Cancel appointment',exact=True).click();row.get_by_role('button',name='Confirm cancellation',exact=True).click();expect(page.get_by_text('Appointment cancelled.',exact=True)).to_be_visible()
+class PortalBrowser(BrowserFixture):
     def test_01_registration_and_reload_have_no_persistent_credentials(self):
         self.page.get_by_role('link',name='Register as a patient').click()
         self.page.get_by_label('Full name').fill('Synthetic new patient');self.page.get_by_label('Email address').fill('new-'+uuid.uuid4().hex+'@example.test');self.page.get_by_label('Password',exact=True).fill('Synthetic-'+uuid.uuid4().hex)
@@ -78,7 +79,7 @@ class PortalBrowser(unittest.TestCase):
         self.login();self.page.evaluate("history.pushState(null,'','/doctor');dispatchEvent(new PopStateEvent('popstate'))")
         expect(self.page.get_by_text('This workspace is not available to your account.',exact=True)).to_be_visible()
         self.page.get_by_role('button',name='Sign out',exact=True).click();expect(self.page.get_by_text('You have been signed out.',exact=True)).to_be_visible()
-        for role,heading in [('technician','Assessment workspace'),('admin','Identity administration')]:
+        for role,heading in [('technician','Assigned assessment workspace'),('admin','Staff access & security')]:
             self.login(role);expect(self.page.get_by_role('heading',name=heading,exact=True)).to_be_visible();self.assertEqual(self.api('GET','/api/appointments').status,403)
             self.page.get_by_role('link',name='Account & security',exact=True).click();expect(self.page.get_by_role('heading',name='Session & access')).to_be_visible();expect(self.page.get_by_text('Loading…',exact=True)).to_have_count(0)
             self.page.get_by_role('button',name='Sign out',exact=True).click();expect(self.page.get_by_text('You have been signed out.',exact=True)).to_be_visible()

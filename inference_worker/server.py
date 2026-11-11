@@ -15,21 +15,71 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from .model import MODEL_SHA256
 
 
-def run_job(command, timeout=20):
-    environment={'PATH':'/usr/local/bin:/usr/bin:/bin','HOME':'/tmp','USER':'stroke-inference','LOGNAME':'stroke-inference','TORCHINDUCTOR_CACHE_DIR':'/tmp/torch','PYTHONPATH':'/app',
-                 'YOLO_CONFIG_DIR':'/tmp/yolo','MPLCONFIGDIR':'/tmp/matplotlib','YOLO_AUTOINSTALL':'false',
+def child_environment():
+    return {'PATH':'/usr/local/bin:/usr/bin:/bin','HOME':'/tmp','USER':'stroke-inference','LOGNAME':'stroke-inference','TORCHINDUCTOR_CACHE_DIR':'/tmp/torch','PYTHONPATH':'/app',
+                 'YOLO_CONFIG_DIR':'/tmp/yolo','MPLCONFIGDIR':'/tmp/matplotlib','YOLO_AUTOINSTALL':'false','YOLO_OFFLINE':'true',
                  'OMP_NUM_THREADS':'2','OPENBLAS_NUM_THREADS':'2','CUDA_VISIBLE_DEVICES':'', 'PYTHONDONTWRITEBYTECODE':'1'}
-    process=subprocess.Popen([sys.executable,'-m','inference_worker.child'],stdin=subprocess.PIPE,
-                             stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,cwd='/app',env=environment,start_new_session=True)
+
+
+_pool=None
+_pool_child=None
+_pool_broken=False
+
+def close_pool():
+    global _pool,_pool_child
+    if _pool_child:
+        try:os.killpg(_pool_child,signal.SIGKILL)
+        except ProcessLookupError:pass
+        _pool_child=None
+    if _pool is not None:
+        try:os.killpg(_pool.pid,signal.SIGKILL)
+        except ProcessLookupError:pass
+        _pool.communicate(timeout=3)
+        _pool=None
+
+def _line(process,timeout):
+    import selectors
+    with selectors.DefaultSelector() as selector:
+        selector.register(process.stdout,selectors.EVENT_READ)
+        if not selector.select(timeout):raise RuntimeError('inference_deadline')
+    raw=process.stdout.readline(8193)
+    if not raw or len(raw)>8192:raise RuntimeError('inference_failed')
+    return json.loads(raw)
+
+def run_job(command, timeout=20):
+    global _pool,_pool_child,_pool_broken
+    if _pool_broken:raise RuntimeError('inference_failed')
+    if _pool is None:
+        _pool=subprocess.Popen([sys.executable,'-m','inference_worker.pool'],stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,cwd='/app',env=child_environment(),start_new_session=True,bufsize=0)
+        try:
+            if _line(_pool,60)!={'ready':True}:raise RuntimeError('inference_failed')
+        except BaseException:
+            close_pool();raise
+    if _pool.poll() is not None:raise RuntimeError('inference_failed')
     try:
-        output,_=process.communicate(json.dumps(command,separators=(',',':')).encode(),timeout=timeout)
-    except subprocess.TimeoutExpired:
-        os.killpg(process.pid,signal.SIGKILL)
-        process.communicate()
-        raise RuntimeError('inference_deadline') from None
-    if process.returncode or not 1<=len(output)<=4096:
-        raise RuntimeError('inference_failed')
-    return json.loads(output)
+        payload=json.dumps({**command,'_deadline':timeout},separators=(',',':')).encode()+b'\n'
+        if len(payload)>1400000:raise RuntimeError('inference_failed')
+        # One admitted HTTP request at a time; the supervisor never receives secrets.
+        view=memoryview(payload)
+        while view:
+            written=_pool.stdin.write(view)
+            if not written:raise OSError('closed supervisor pipe')
+            view=view[written:]
+        started=_line(_pool,2)
+        if set(started)!={'started'} or type(started['started']) is not int or started['started']<2:raise RuntimeError('inference_failed')
+        _pool_child=started['started']
+        reply=_line(_pool,timeout+2)
+        _pool_child=None
+    except (OSError,ValueError,KeyError,RuntimeError):
+        _pool_broken=True;close_pool();raise RuntimeError('inference_failed') from None
+    if 'error' in reply:
+        raise RuntimeError(reply['error'] if reply['error'] in {'inference_deadline','inference_failed'} else 'inference_failed')
+    return reply['result']
+
+
+import atexit
+atexit.register(close_pool)
 
 
 def synthetic():
@@ -101,5 +151,6 @@ def main():
 if __name__=='__main__':
     try:
         main()
-    except Exception:
-        raise SystemExit('Inference worker startup refused') from None
+    except Exception as error:
+        code=str(error) if str(error) in {'inference_deadline','inference_failed','model_not_ready','explicit_private_key_required'} else 'startup_check_failed'
+        raise SystemExit('Inference worker startup refused: '+code) from None

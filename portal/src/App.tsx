@@ -1,3 +1,5 @@
+import { Clinical, StartAssessment } from "./Clinical";
+import { Admin, Recovery } from "./Admin";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
   ApiClient,
@@ -206,6 +208,7 @@ function AuthForm({
             {register ? "Sign in" : "Register as a patient"}
           </Link>
         </p>
+        <Link to="/recover">Recover or activate an account</Link>
         <p className="hint">
           Staff accounts are provisioned through the authorized hospital
           identity process. Refreshing this page signs you out.
@@ -397,6 +400,9 @@ function BookingDashboard({
                         </p>
                         <span className={"badge " + a.status}>{a.status}</span>
                       </div>
+                      {doctor && a.status === "confirmed" && (
+                        <StartAssessment api={api} appointment={a} />
+                      )}
                       {a.status === "confirmed" && (
                         <div className="record-action">
                           {confirm?.id === a.id ? (
@@ -800,7 +806,11 @@ export function App({ client }: { client?: ApiClient }) {
     }
   }
   const home = person ? "/" + person.role : "/login";
-  const allowed = person && (path === home || path === "/account");
+  const allowed =
+    person &&
+    (path === home ||
+      path === "/account" ||
+      (path === "/clinical" && person.role !== "admin"));
   return (
     <>
       <a className="skip" href="#main">
@@ -851,6 +861,16 @@ export function App({ client }: { client?: ApiClient }) {
                   ? "Practice & schedule"
                   : names[person.role] + " workspace"}
             </Link>
+            {person.role !== "admin" && (
+              <Link
+                to="/clinical"
+                aria-current={path === "/clinical" ? "page" : undefined}
+              >
+                {person.role === "patient"
+                  ? "Approved assessments"
+                  : "Clinical workspace"}
+              </Link>
+            )}
             <Link
               to="/account"
               aria-current={path === "/account" ? "page" : undefined}
@@ -871,7 +891,9 @@ export function App({ client }: { client?: ApiClient }) {
           className={person ? "workspace" : "auth-main"}
           key={person?.sessionId || "guest"}
         >
-          {!person ? (
+          {!person && path === "/recover" ? (
+            <Recovery api={api} />
+          ) : !person ? (
             <AuthForm
               key={path}
               api={api}
@@ -890,6 +912,11 @@ export function App({ client }: { client?: ApiClient }) {
               <p>Your hospital role determines which services you can use.</p>
               <Link to={home}>Return to your workspace</Link>
             </section>
+          ) : path === "/clinical" ||
+            (person.role === "technician" && path !== "/account") ? (
+            <Clinical api={api} person={person} />
+          ) : person.role === "admin" && path !== "/account" ? (
+            <Admin api={api} person={person} />
           ) : path === "/account" ? (
             <Account
               api={api}
@@ -898,40 +925,7 @@ export function App({ client }: { client?: ApiClient }) {
             />
           ) : person.role === "patient" || person.role === "doctor" ? (
             <BookingDashboard api={api} principal={person} />
-          ) : (
-            <>
-              <div className="page-heading">
-                <div>
-                  <p className="eyebrow">
-                    {names[person.role].toUpperCase()} WORKSPACE
-                  </p>
-                  <h1>Welcome to your care portal.</h1>
-                  <p>
-                    Your shared identity is active. Clinical and
-                    staff-management screens are not yet available in this
-                    portal.
-                  </p>
-                </div>
-              </div>
-              <section className="panel">
-                <h2>
-                  {person.role === "technician"
-                    ? "Assessment workspace"
-                    : "Identity administration"}
-                </h2>
-                <p>
-                  {person.role === "technician"
-                    ? "Use the authorized clinical workflow for your assigned assessments."
-                    : "Staff access continues to be managed through authorized hospital processes."}
-                </p>
-                <p>
-                  No clinical records, scans or experimental predictions are
-                  displayed in this portal.
-                </p>
-                <Link to="/account">Manage your account & security</Link>
-              </section>
-            </>
-          )}
+          ) : null}
         </main>
       </div>
       <footer>

@@ -3,12 +3,13 @@
 ⚠️ **Not a clinical tool — for educational and prototyping purposes only.**
 
 
-## Unified React portal — Milestone 5A
+## Unified React portal — Milestone 5B
 
-The new **React + TypeScript care portal** uses the shared booking identity authority for patient registration/login, patient booking/cancellation, doctor availability/assigned appointments and role-based account navigation. Clinical views and experimental predictions are not exposed in this milestone. Legacy Streamlit authentication remains separate.
+The new **React + TypeScript care portal** uses the shared booking identity authority for patient registration/login, patient booking/cancellation, doctor availability/assigned appointments and role-based account navigation. Assigned staff can capture and review synthetic assessments; patients see only their own clinician-approved results and private scans. Experimental CPU predictions and their review remain doctor-only, separate from approved human findings. Administrators manage staff with password rechecks and private activation/recovery delivery. Legacy Streamlit authentication remains separate.
 
 ```sh
 # Docker, host Python 3 and Git/flock required; creates only fresh synthetic fixtures.
+docker build -f inference_worker/Dockerfile -t stroke-inference:milestone4b .
 bash scripts/portal-demo.sh start
 # Open http://127.0.0.1:4180
 # Read newly generated synthetic credentials privately from .portal-demo/credentials.json.
@@ -16,7 +17,7 @@ bash scripts/portal-demo.sh start
 bash scripts/portal-demo.sh stop
 ```
 
-See [portal setup/development/browser tests](portal/README.md), [5A verified results](docs/hospital-milestone-5a-verification.md) and the [integration plan](docs/hospital-integration-plan.md). Credentials/builds/screenshots remain ignored; existing patient databases, scans, weights and credentials are never adopted. The legacy instructions below describe the separate prototype, not the new shared-auth portal.
+See [portal setup/development/browser tests](portal/README.md), [5B verified results](docs/hospital-milestone-5b-verification.md) and the [integration plan](docs/hospital-integration-plan.md). Credentials/builds/screenshots remain ignored; existing patient databases, scans, weights and credentials are never adopted. The legacy instructions below describe the separate prototype, not the new shared-auth portal.
 
 ## 📚 Table of Contents  
 1. [Overview](#1--overview)  

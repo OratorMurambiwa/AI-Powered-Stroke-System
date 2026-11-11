@@ -51,3 +51,28 @@ class BookingAdapter:
             return data
         except (ClinicalError, ValueError, TypeError):
             raise ClinicalError(503, 'invalid_appointment_proof') from None
+
+    def owned(self, bearer: str, principal: Principal, appointment_id: str) -> dict:
+        """Live existing owned-appointment API; no patient search or identity auto-link."""
+        parts = urlsplit(self.identity.url)
+        url = urlunsplit((parts.scheme, parts.netloc, f'/api/v1/appointments/{uuid_id(appointment_id)}', '', ''))
+        try:
+            with self.identity.opener.open(Request(url,headers={'Authorization':bearer}),timeout=self.identity.timeout) as response:
+                length=response.headers.get('Content-Length','')
+                if (response.status!=200 or response.headers.get_content_type()!='application/json'
+                        or len(response.headers.get_all('Content-Length',[]))!=1 or response.headers.get('Transfer-Encoding')
+                        or not length.isdigit() or not 1<=int(length)<=4096): raise ValueError
+                raw=response.read(int(length)+1)
+                if len(raw)!=int(length): raise ValueError
+                data=strict_json(raw)
+        except HTTPError as error:
+            status=error.code; error.close()
+            raise ClinicalError(401 if status==401 else 404 if status in {403,404} else 503,'appointment_context_unavailable') from None
+        except (OSError,URLError,HTTPException,ValueError,UnicodeError,RecursionError):
+            raise ClinicalError(503,'booking_unavailable') from None
+        expected={'schemaVersion','appointmentId','patientSubject','doctorSubject','date','startTime','endTime','status','assessmentRequestId','encounterId'}
+        if not isinstance(data,dict) or set(data)!=expected or type(data['schemaVersion']) is not int or data['schemaVersion']!=1 or data['appointmentId']!=appointment_id or data['doctorSubject']!=principal.subject:
+            raise ClinicalError(503,'invalid_appointment_context')
+        subject_id(data['patientSubject'])
+        if data['status']!='confirmed': raise ClinicalError(409,'confirmed_appointment_required')
+        return data

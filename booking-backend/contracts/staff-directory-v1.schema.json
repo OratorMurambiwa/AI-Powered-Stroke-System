@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:staff-directory:v1",
+  "title": "Admin-only identity directory; no clinical rights",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "limit",
+    "staff"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "limit": {
+      "const": 100
+    },
+    "staff": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "state"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{24}$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "doctor",
+              "technician",
+              "admin"
+            ]
+          },
+          "state": {
+            "enum": [
+              "active",
+              "invited",
+              "revoked"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

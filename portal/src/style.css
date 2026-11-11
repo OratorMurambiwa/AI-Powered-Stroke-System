@@ -887,3 +887,132 @@ footer span {
     scroll-behavior: auto !important;
   }
 }
+.clinical-fields,
+.observation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 18px;
+  margin: 20px 0;
+}
+.observation-grid div {
+  padding: 12px;
+  background: #f2f7f4;
+  border-radius: 8px;
+}
+.observation-grid dt {
+  font-size: 0.8rem;
+  color: #546e70;
+}
+.observation-grid dd {
+  margin: 4px 0;
+  font-weight: 700;
+}
+fieldset {
+  border: 1px solid #d8e5df;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+}
+fieldset:disabled {
+  opacity: 0.6;
+}
+textarea {
+  font: inherit;
+  min-height: 90px;
+  border: 1px solid #b4cbc5;
+  border-radius: 8px;
+  padding: 12px;
+  width: 100%;
+  resize: vertical;
+}
+.check-label {
+  flex-direction: row;
+  align-items: center;
+  margin: 18px 0;
+}
+.check-label input {
+  width: 20px;
+  min-height: 20px;
+  flex-shrink: 0;
+}
+.clinical-detail h3 {
+  margin-top: 28px;
+}
+.clinical-detail button {
+  margin: 7px 8px 7px 0;
+}
+.prediction-panel {
+  background: #fff8e9;
+  border: 1px solid #e2cd9c;
+  padding: 24px;
+  border-radius: 12px;
+  margin-top: 30px;
+}
+.prediction-record {
+  border-top: 1px solid #dbcba9;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+.prediction-record .hint {
+  overflow-wrap: anywhere;
+}
+.internal-note {
+  padding: 14px;
+  border-left: 3px solid #799b9a;
+  background: #f3f6f5;
+}
+.recovery-card {
+  max-width: 650px;
+  margin: 30px auto;
+}
+.recovery-card h2 {
+  margin-top: 25px;
+}
+.recovery-card button {
+  margin-top: 18px;
+}
+.intake-control {
+  max-width: 260px;
+  font-size: 0.8rem;
+}
+.intake-control p {
+  color: #8c3c29;
+}
+.sidebar {
+  min-width: 0;
+}
+.sidebar a {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .sidebar {
+    flex-wrap: wrap;
+  }
+  .clinical-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+  .clinical-detail {
+    padding: 14px;
+  }
+  .clinical-detail fieldset {
+    padding: 14px;
+  }
+  .prediction-panel {
+    padding: 16px;
+  }
+  .clinical-summary p {
+    overflow-wrap: anywhere;
+  }
+}
+.clinical-fields > label {
+  min-width: 0;
+}
+.clinical-fields input {
+  min-width: 0;
+}
+.clinical-detail fieldset {
+  min-width: 0;
+}
+.clinical-detail > .panel-head .hint {
+  overflow-wrap: anywhere;
+}

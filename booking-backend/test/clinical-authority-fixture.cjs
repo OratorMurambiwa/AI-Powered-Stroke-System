@@ -2,7 +2,7 @@
 const crypto = require('node:crypto');
 const readline = require('node:readline');
 const { once } = require('node:events');
-if (!/^mongodb:\/\/stroke-booking-mongo:27017\/(?:synthetic_clinical_identity|synthetic_workflow_identity|synthetic_assessment_review|synthetic_prediction_identity)\?replicaSet=rs0$/.test(process.env.MONGODB_URI || '')) throw new Error('Synthetic-only authority fixture');
+if (!/^mongodb:\/\/stroke-booking-mongo:27017\/(?:synthetic_clinical_identity|synthetic_workflow_identity|synthetic_assessment_review|synthetic_prediction_identity|synthetic_workspace_identity)\?replicaSet=rs0$/.test(process.env.MONGODB_URI || '')) throw new Error('Synthetic-only authority fixture');
 process.env.JWT_SECRET = crypto.randomBytes(48).toString('hex');
 process.env.IDENTITY_DELIVERY_KEY = crypto.randomBytes(32).toString('hex');
 process.env.NODE_ENV = 'test';

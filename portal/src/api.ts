@@ -26,6 +26,8 @@ export interface Appointment {
   date: string;
   startTime: string;
   endTime: string;
+  encounterId?: string;
+  assessmentRequestId?: string;
   status: "confirmed" | "cancelled" | "completed";
 }
 export interface Schedule {
@@ -123,6 +125,8 @@ export class ApiClient {
     method = "GET",
     body?: unknown,
     authenticated = true,
+    timeout = 10000,
+    binary = false,
   ): Promise<unknown> {
     const epoch = this.#epoch,
       token = this.#token;
@@ -130,7 +134,7 @@ export class ApiClient {
       throw new ApiError(401, "Please sign in again.");
     const controller = new AbortController();
     this.#pending.add(controller);
-    const timer = setTimeout(() => controller.abort(), 10000);
+    const timer = setTimeout(() => controller.abort(), timeout);
     try {
       const response = await this.transport(path, {
         method,
@@ -158,6 +162,7 @@ export class ApiClient {
           403: "Your account is not permitted to perform this action.",
           404: "This record is not available to your account.",
           409: "This record changed or is unavailable. Refresh before trying again.",
+          422: "Assessment intake was rejected. Verify the explicit mappings with an operator and refresh the appointment.",
           429: "Too many requests. Please wait before trying again.",
         };
         throw new ApiError(
@@ -165,6 +170,13 @@ export class ApiClient {
           errors[response.status] ||
             "The scheduling service is unavailable. Please try again shortly.",
         );
+      }
+      if (binary) {
+        if (response.headers.get("content-type") !== "image/png") invalid();
+        const blob = await response.blob();
+        if (epoch !== this.#epoch) throw new StaleSession();
+        if (!blob.size || blob.size > 1048576) invalid();
+        return blob;
       }
       if (response.status === 204) return null;
       if (!response.headers.get("content-type")?.includes("application/json"))
@@ -296,6 +308,15 @@ export class ApiClient {
         date: date(v.date),
         startTime: time(v.startTime),
         endTime: time(v.endTime),
+        encounterId:
+          typeof v.encounterId === "string" && uuid.test(v.encounterId)
+            ? v.encounterId
+            : undefined,
+        assessmentRequestId:
+          typeof v.assessmentRequestId === "string" &&
+          uuid.test(v.assessmentRequestId)
+            ? v.assessmentRequestId
+            : undefined,
         status: v.status as Appointment["status"],
       };
     });
@@ -334,5 +355,37 @@ export class ApiClient {
     )
       invalid();
     return v.sessions.length;
+  }
+  async clinical(path: string, method = "GET", body?: unknown) {
+    return this.request("/api/v1/clinical/" + path, method, body, true, 35000);
+  }
+  async startAssessment(appointment: string, command: unknown) {
+    return this.request(
+      `/api/v1/appointments/${appointment}/assessment-requests`,
+      "POST",
+      command,
+    );
+  }
+  async scan(encounter: string, scan: string): Promise<Blob> {
+    return (await this.request(
+      `/api/v1/clinical/encounters/${encounter}/scans/${scan}`,
+      "GET",
+      undefined,
+      true,
+      10000,
+      true,
+    )) as Blob;
+  }
+  async identity(path: string, method = "GET", body?: unknown) {
+    return this.request("/api/v1/identity/" + path, method, body);
+  }
+  async recover(body: unknown, reset = false) {
+    return this.request(
+      "/api/v1/identity/auth/password-recovery/" +
+        (reset ? "reset" : "request"),
+      "POST",
+      body,
+      false,
+    );
   }
 }

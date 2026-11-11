@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stroke-platform:contracts:appointment-clinical-context:v1",
+  "title": "Live owned appointment plus explicit clinical links; not intake authorization",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "appointmentId",
+    "sourceId",
+    "patientId",
+    "patientMappingId",
+    "clinicianMappingId"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "appointmentId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "sourceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "patientId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "patientMappingId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "clinicianMappingId": {
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}

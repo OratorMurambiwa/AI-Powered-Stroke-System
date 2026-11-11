@@ -10,11 +10,12 @@ PY
 }
 stop_owned() {
   local project=$1
-  for suffix in app mongo; do
+  for suffix in app mongo inference; do
     if [[ "$(docker inspect -f '{{index .Config.Labels "org.medstroke.demo"}}' "$project-$suffix" 2>/dev/null || true)" == "$project" ]]; then docker rm -f "$project-$suffix" >/dev/null; fi
   done
   if [[ "$(docker network inspect -f '{{index .Labels "org.medstroke.demo"}}' "$project" 2>/dev/null || true)" == "$project" ]]; then docker network rm "$project" >/dev/null; fi
-  rm -f "$state/credentials.json" "$state/control.json" "$state/control-ack.json"
+  if [[ "$(docker network inspect -f '{{index .Labels "org.medstroke.demo"}}' "$project-inference" 2>/dev/null || true)" == "$project" ]]; then docker network rm "$project-inference" >/dev/null; fi
+  rm -f "$state/worker.env" "$state/delivery-once.json" "$state/credentials.json" "$state/control.json" "$state/control-ack.json"
 }
 case "$action" in
 start)
@@ -34,7 +35,8 @@ PY
   successful=false
   cleanup_start() { if [[ "$successful" != true ]]; then stop_owned "$project"; mv "$state/run.json" "$state/last-run.json"; fi; }
   trap cleanup_start EXIT
-  docker run --rm -v "$PWD/booking-backend:/repo/booking-backend" -v "$PWD/portal:/repo/portal" -w /repo node:22.14.0-alpine sh -ec 'cd booking-backend; npm ci; npm run build; cd ../portal; npm ci; npm test; npm run build; npm audit'
+  mkdir -p "$state/npm-cache"
+  docker run --rm -v "$state/npm-cache:/root/.npm" -v "$PWD/booking-backend:/repo/booking-backend" -v "$PWD/portal:/repo/portal" -w /repo node:22.14.0-alpine sh -ec 'cd booking-backend; npm ci --prefer-offline --fetch-retries=2 --fetch-timeout=60000; npm run build; cd ../portal; npm ci --prefer-offline --fetch-retries=2 --fetch-timeout=60000; npm test; npm run build; npm audit'
   docker network create --label "org.medstroke.demo=$project" "$project" >/dev/null
   docker run -d --name "$project-mongo" --label "org.medstroke.demo=$project" --network "$project" --network-alias stroke-portal-mongo \
     --memory 512m --cpus 1 --tmpfs /data/db --tmpfs /data/configdb \
@@ -52,14 +54,31 @@ PY
     sleep 1
   done
   [[ "$ready" == true ]] || { echo 'Synthetic MongoDB did not elect primary'; exit 1; }
-  docker run -d --name "$project-app" --label "org.medstroke.demo=$project" --network "$project" --network-alias stroke-portal-app \
+  docker build -t stroke-portal-app:5b -f portal/demo/Dockerfile portal/demo
+  docker image inspect stroke-inference:milestone4b >/dev/null
+  python3 - "$state/worker.env" <<'PYKEY'
+import secrets,sys,os
+with open(sys.argv[1],'x') as f:f.write('INFERENCE_SERVICE_KEY='+secrets.token_hex(32)+'\n')
+os.chmod(sys.argv[1],0o600)
+PYKEY
+  docker network create --internal --label "org.medstroke.demo=$project" "$project-inference" >/dev/null
+  docker run -d --name "$project-inference" --label "org.medstroke.demo=$project" --network "$project-inference" --network-alias stroke-inference-worker \
+    --env-file "$state/worker.env" --read-only --tmpfs /tmp:rw,size=64m --memory 1500m --cpus 2 --pids-limit 64 --cap-drop ALL --security-opt no-new-privileges \
+    -v "$PWD/ml/MedStroke.pt:/artifact/MedStroke.pt:ro" stroke-inference:milestone4b >/dev/null
+  ready=false
+  for _ in {1..80}; do
+    if docker exec "$project-inference" python -c 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8020/health",timeout=1).read()' >/dev/null 2>&1; then ready=true; break; fi
+    sleep 1
+  done
+  [[ "$ready" == true ]] || { echo 'Inference worker readiness failed'; exit 1; }
+  docker run -d --name "$project-app" --label "org.medstroke.demo=$project" --network "$project" --network "$project-inference" --network-alias stroke-portal-app --env-file "$state/worker.env" \
     --user "$(id -u):$(id -g)" --read-only --tmpfs /tmp --memory 512m --cpus 1 --cap-drop ALL --security-opt no-new-privileges \
     -p "127.0.0.1:$port:4173" \
     -v "$PWD/booking-backend/dist:/repo/booking-backend/dist:ro" -v "$PWD/booking-backend/node_modules:/repo/booking-backend/node_modules:ro" \
-    -v "$PWD/portal/dist:/repo/portal/dist:ro" -v "$PWD/portal/demo/server.cjs:/repo/portal/demo/server.cjs:ro" \
+    -v "$PWD/portal/dist:/repo/portal/dist:ro" -v "$PWD/portal/demo/server.cjs:/repo/portal/demo/server.cjs:ro" -v "$PWD/portal/demo/clinical.py:/repo/portal/demo/clinical.py:ro" -v "$PWD/clinical_api:/repo/clinical_api:ro" \
     -v "$state:/demo-private" -w /repo \
     -e MONGODB_URI='mongodb://stroke-portal-mongo:27017/synthetic_portal_demo?replicaSet=rs0' -e PORTAL_SYNTHETIC_DEMO=true \
-    node:22.14.0-alpine node portal/demo/server.cjs >/dev/null
+    stroke-portal-app:5b node portal/demo/server.cjs >/dev/null
   ready=false
   for _ in {1..40}; do
     if [[ -f "$state/credentials.json" ]] && docker exec "$project-app" node -e 'fetch("http://127.0.0.1:4173/api/health").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))' >/dev/null 2>&1; then ready=true; break; fi
@@ -77,9 +96,31 @@ stop)
 test)
   project=$(read_run)
   docker image inspect stroke-portal-browser:5a >/dev/null
-  docker run --rm --network "$project" --memory 1200m --cpus 2 --shm-size 256m \
-    -e PORTAL_TEST_URL=http://stroke-portal-app:4173 -v "$PWD/portal/tests:/tests:ro" -v "$state:/demo-private" \
+  docker run --rm --network "container:$project-app" --memory 1200m --cpus 2 --shm-size 256m \
+    -e PORTAL_TEST_URL=http://127.0.0.1:4173 -v "$PWD/portal/tests:/tests:ro" -v "$state:/demo-private" \
     --entrypoint python stroke-portal-browser:5a /tests/browser.py
+  docker run --rm --network "container:$project-app" --memory 1200m --cpus 2 --shm-size 256m \
+    -e PORTAL_TEST_URL=http://127.0.0.1:4173 -v "$PWD/portal/tests:/tests:ro" -v "$state:/demo-private" \
+    --entrypoint python stroke-portal-browser:5a /tests/browser_clinical.py
   ;;
-*) echo 'Usage: scripts/portal-demo.sh start|test|stop'; exit 1;;
+deliver)
+  project=$(read_run)
+  python3 portal/demo/operator.py "$state" "${2:-}"
+  ;;
+assign)
+  project=$(read_run)
+  python3 - "$state" "${2:-}" <<'PYASSIGN'
+import json,sys,time,uuid
+from pathlib import Path
+root=Path(sys.argv[1]);encounter=str(uuid.UUID(sys.argv[2]));command={'id':str(uuid.uuid4()),'action':'assign','encounterId':encounter}
+tmp=root/'control-next.json';tmp.write_text(json.dumps(command));tmp.replace(root/'control.json')
+for _ in range(200):
+ try:
+  if json.loads((root/'control-ack.json').read_text())['id']==command['id']:print('Explicit synthetic technician assignment recorded');break
+ except FileNotFoundError:pass
+ time.sleep(.1)
+else:raise SystemExit('Operator assignment not acknowledged')
+PYASSIGN
+  ;;
+*) echo 'Usage: scripts/portal-demo.sh start|test|stop|assign ENCOUNTER_UUID|deliver DELIVERY_UUID'; exit 1;;
 esac

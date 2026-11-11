@@ -24,9 +24,16 @@ function fixture(role = "patient") {
         ? res(me(role))
         : path.includes("/availability")
           ? res({ availability: [] })
-          : path.includes("/sessions")
-            ? res({ schemaVersion: 1, sessions: [] })
-            : res({ appointments: [] }),
+          : path.endsWith("/workspace")
+            ? res({
+                schemaVersion: 1,
+                sourceId: "11111111-1111-4111-8111-111111111111",
+                encounters: [],
+                limit: 100,
+              })
+            : path.includes("/sessions")
+              ? res({ schemaVersion: 1, sessions: [] })
+              : res({ appointments: [] }),
   );
   const api = new ApiClient(fetch as typeof window.fetch);
   return { fetch, api };
@@ -81,11 +88,13 @@ it("technicians do not fetch appointment or clinical data", async () => {
   render(<App client={api} />);
   await signIn();
   expect(
-    await screen.findByRole("heading", { name: "Assessment workspace" }),
+    await screen.findByRole("heading", {
+      name: "Assigned assessment workspace",
+    }),
   ).toBeVisible();
   expect(
     fetch.mock.calls.some(
-      ([p]) => p.includes("/appointments") || p.includes("/clinical"),
+      ([p]) => p.includes("/appointments") || p.includes("/predictions"),
     ),
   ).toBe(false);
 });

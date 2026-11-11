@@ -54,13 +54,13 @@ docker run -d --name "$project-inference" --network "$project-inference" \
   --cap-drop ALL --security-opt no-new-privileges \
   -v "$PWD/ml/MedStroke.pt:/artifact/MedStroke.pt:ro" stroke-inference:milestone4b >/dev/null
 ready=false
-for _ in {1..40}; do
+for _ in {1..80}; do
   if docker exec "$project-inference" python -c 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8020/health", timeout=1).read()' >/dev/null 2>&1; then
     ready=true; break
   fi
   sleep 1
 done
-if [[ "$ready" != true ]]; then echo 'Restricted inference worker failed its real CPU startup gate' >&2; exit 1; fi
+if [[ "$ready" != true ]]; then echo 'Restricted inference worker failed its real CPU startup gate' >&2; docker inspect --format 'Worker status={{.State.Status}} exit={{.State.ExitCode}} OOM={{.State.OOMKilled}}' "$project-inference" >&2; docker logs --tail=5 "$project-inference" >&2; exit 1; fi
 # Standalone worker tests run with no network, using the real read-only artifact.
 docker run --rm --network none --read-only --tmpfs /tmp:rw,size=64m \
   --memory 1500m --cpus 2 --pids-limit 64 --cap-drop ALL --security-opt no-new-privileges \
