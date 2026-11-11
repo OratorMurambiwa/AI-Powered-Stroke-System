@@ -97,6 +97,10 @@ The React portal now uses the existing clinical gateway for explicitly mapped, a
 
 Versioned workspace, appointment-context and staff-directory contracts add discovery without adopting historical records. The complete synthetic demo connects React, Express/MongoDB, a new temporary SQLite v4 store and the isolated real CPU model worker. A bounded credential-free model supervisor removes repeated cold framework imports while preserving fresh per-scan children and execution limits. See [5B verification](hospital-milestone-5b-verification.md) and [demo commands](../portal/README.md). Legacy Streamlit, hosted AI, original databases/scans and model weights remain separate and unchanged.
 
+## Milestone 6 — measured performance, reliability and security
+
+Fixed-quota networkless CPU benchmarks compare af6fbf7 with bounded IPC/readiness fixes using identical synthetic patterns and exact output parity. Real gateway/API workloads and existing regression/browser suites validate current ownership, approval, revocation, upload, retry and service-failure boundaries. No model/preprocessing or clinical feature expansion is introduced; an audited Pillow decoder update is gated on exact synthetic prediction parity and regressions. Static notebook source inspection identifies a possible training dataset, but no independent patient-grouped evaluation cohort or verified checkpoint lineage; accuracy/precision/recall/F1/confusion matrix remain unmeasured. See [verified measurements and limitations](hospital-milestone-6-verification.md) and [reproduction](performance/README.md).
+
 ## Current limits
 
 The unified scheduling frontend is implemented and browser-verified against isolated synthetic services. Clinical capture, approved patient-result views, doctor-only experimental prediction review and staff-management/recovery UI are implemented in 5B for explicitly linked synthetic fixtures. Streamlit sessions remain separate and confer no shared identity or clinical linkage. No existing hospital records/accounts are automatically adopted.

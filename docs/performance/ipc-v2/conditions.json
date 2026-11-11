@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "capturedAtUtc": "2026-11-11T01:41:26.341660+00:00",
+  "harnessSha256": "e3b6a1e23b4b94e5da9b3dc01c2984c91fe2ceb26f4095c2f9e68acf14d9b8b5",
+  "baselineImageId": "sha256:3b92b06719d109469ec6422c5c3af6a84512317af73ca3aa45e96da8c4e16d4e",
+  "candidateImageId": "sha256:110c4b2a5dbad5d0ba57ea13bdc973a3190243f83e83629156886cda840a3bc6",
+  "baselineRuntimeSourceSha256": {
+    "inference_worker/server.py": "c8edb89802f6bda16993607251cbc8d7cbf0d0fdba060242da431654d0501025",
+    "inference_worker/pool.py": "64bd2fda7f05c020709cecd9eb79848c0a06b6efe3bb8e80a5eccd9ea9eb4f08",
+    "inference_worker/model.py": "a628e95414721c5c9f35e8bca3f93559de8c6206fd91cb28387fca6c46ad833c"
+  },
+  "candidateRuntimeSourceSha256": {
+    "inference_worker/server.py": "9c8a4b6cb2294e286f2204d5a237d4c1babf9f25c18153f1772ceea77594dca4",
+    "inference_worker/pool.py": "64bd2fda7f05c020709cecd9eb79848c0a06b6efe3bb8e80a5eccd9ea9eb4f08",
+    "inference_worker/model.py": "a628e95414721c5c9f35e8bca3f93559de8c6206fd91cb28387fca6c46ad833c"
+  },
+  "limits": {
+    "cpus": 2,
+    "memoryBytes": 1572864000,
+    "pids": 64,
+    "tmpfsBytes": 67108864,
+    "network": "none",
+    "torchThreads": 2
+  },
+  "hardware": {
+    "NCPU": 14,
+    "MemTotal": 7751802880,
+    "KernelVersion": "6.6.87.2-microsoft-standard-WSL2",
+    "OSType": "linux",
+    "Architecture": "x86_64",
+    "ServerVersion": "29.9.2",
+    "cpuModel": "Intel(R) Core(TM) Ultra 5 225U"
+  },
+  "complete": true
+}

@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "af6fbf7ca5cf9fbfaefa0320d178f5a73a1ca20d",
+  "notebookSha256": "c03cf18a0d73a03cbb3b221d07ce5152a8484918ac229010d279c6ea4e7b36da",
+  "sourceCellSha256": {
+    "4": "d203e3776b946af8e207987b79ea5126ed2a6c5d4105c01205e3ebec073f5f1b",
+    "9": "83595c0a0b8937b8ea3ca9d35359dab23dd35eb172df26e2a73ca7f35aa8558b",
+    "14": "183bc4fec71950c003641564663120428e41c1d0955c205de9c0e96a8feef8cd",
+    "16": "63a74493755e99697d0ba2fc13195c854a7149632117efc772a7c85e4e57da46",
+    "19": "8f3353625b71be7b0b52071ad3de609b1271cda9375b6fbb83e88dd6039483ab",
+    "21": "473465819d9f48d7c143aee63bab7ae576d2710b6a3320204d7224a0a70e67de",
+    "22": "80bfb0e878707b0ac23f33eab5893e1926b4ba3e55e371d64f56fbc0ae9f1cf6",
+    "23": "e94b404e357d2c3ea9c2f162268912733a30c6911770e30bb6152c029ab8db5c"
+  },
+  "trainingDataLead": "ozguraslank/brain-stroke-ct-dataset",
+  "split": "image-level 70/15/15, random.seed(42); filesystem listing not sorted; no patient/study grouping in split code",
+  "trainingCommand": {
+    "architecture": "yolov8n-cls.pt",
+    "epochs": 20,
+    "imgsz": 224
+  },
+  "checkpointLinkVerified": false,
+  "independentTestManifestAvailable": false,
+  "clinicalMetrics": {
+    "accuracy": null,
+    "precision": null,
+    "recall": null,
+    "f1": null,
+    "confusionMatrix": null
+  },
+  "reason": "No verified checkpoint training manifest, immutable dataset version/hash, patient-grouped split or independent approved labeled test cohort.",
+  "notebookExecuted": false,
+  "notebookOutputsInspected": false,
+  "patientFilesInspected": false
+}

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "af6fbf7ca5cf9fbfaefa0320d178f5a73a1ca20d",
+  "harnessSha256": {
+    "benchmarks/parity.py": "672f26e93c46591799326c26fc2ddbc13fe7aeb8b1881553531c907c7ac1144e",
+    "benchmarks/api.py": "f98e150e6b2f8c46cc28b55b2907af8a7a651c3eb6919306fcdfd3149d4b300f",
+    "benchmarks/model.py": "fd8a3a3e48cdb10ee83d69bcbc9f169a139e4f25c6c8fc2b56eefffde3cd2783",
+    "benchmarks/ipc_v1.py": "253e8be62a86fcc57c84aa1f7dac0fef82d4a71d3c953ec3f4eead079ebf1af9",
+    "benchmarks/statistics.py": "ffe819fca2f95df5615d2d70cfd223a7cb1def9181e11a0d490fc63b6ac8b36e",
+    "benchmarks/verify_results.py": "9459449de1888360fec4afaaec8b710bd39026899ba62030148d747870c4f080",
+    "benchmarks/ipc.py": "e3b6a1e23b4b94e5da9b3dc01c2984c91fe2ceb26f4095c2f9e68acf14d9b8b5",
+    "benchmarks/test_statistics.py": "9d041bda2155982b478601e88306ce0f6801b5376fbabc4aa03301da0c01cb95",
+    "benchmarks/synthetic.py": "6ab97a879af7d439a76b4f6f8ef8e8e69c14e05b2cc3923cf3893c7e41a79d75"
+  },
+  "containers": {
+    "app": {
+      "imageId": "sha256:8ae4f9e9dbb14c0f5fbf5d509fb9d5475dc630b7a8b8489b4c91f407f5645db1",
+      "memoryLimit": 536870912,
+      "nanoCpus": 1000000000
+    },
+    "mongo": {
+      "imageId": "sha256:9814652e33f0cf8b9fddea8b46dfc9d8e19b130dcfdd7b510ca58bb0d40c8b71",
+      "memoryLimit": 536870912,
+      "nanoCpus": 1000000000
+    },
+    "inference": {
+      "imageId": "sha256:110c4b2a5dbad5d0ba57ea13bdc973a3190243f83e83629156886cda840a3bc6",
+      "memoryLimit": 1572864000,
+      "nanoCpus": 2000000000
+    }
+  },
+  "complete": true
+}

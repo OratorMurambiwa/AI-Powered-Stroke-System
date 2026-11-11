@@ -17,6 +17,8 @@ bash scripts/portal-demo.sh start
 bash scripts/portal-demo.sh stop
 ```
 
+Milestone 6 adds [measured performance, reliability and security results](docs/hospital-milestone-6-verification.md) and [repeatable synthetic benchmarks](docs/performance/README.md). Clinical accuracy remains unvalidated.
+
 See [portal setup/development/browser tests](portal/README.md), [5B verified results](docs/hospital-milestone-5b-verification.md) and the [integration plan](docs/hospital-integration-plan.md). Credentials/builds/screenshots remain ignored; existing patient databases, scans, weights and credentials are never adopted. The legacy instructions below describe the separate prototype, not the new shared-auth portal.
 
 ## 📚 Table of Contents  

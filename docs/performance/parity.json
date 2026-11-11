@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "exactEquality": true,
+  "baselinePillow": "11.3.0",
+  "candidatePillow": "13.0.0",
+  "syntheticOnly": true,
+  "results": [
+    {
+      "width": 64,
+      "height": 64,
+      "channels": 1,
+      "predictedClass": "normal",
+      "rawScore": 0.5555691719055176,
+      "scores": [
+        0.3117815852165222,
+        0.13264930248260498,
+        0.5555691719055176
+      ],
+      "modelSha256": "200f5ab52415cb96dae577a45b5d1cb8a6dedb2cbab03c32885d826553d0d595",
+      "modelVersion": "medstroke-checkpoint-2025-10-27-ultralytics-8.3.221",
+      "preprocessingVersion": "rgb-resize-short224-bilinear-centercrop224-tensor01-v1",
+      "scanSha256": "1e445a2ca136392b43b620864b88943b58868b43a4541553fa0d32224eef761f"
+    },
+    {
+      "width": 64,
+      "height": 64,
+      "channels": 3,
+      "predictedClass": "ischemia",
+      "rawScore": 1.0,
+      "scores": [
+        8.083452657237089e-11,
+        1.0,
+        0.0
+      ],
+      "modelSha256": "200f5ab52415cb96dae577a45b5d1cb8a6dedb2cbab03c32885d826553d0d595",
+      "modelVersion": "medstroke-checkpoint-2025-10-27-ultralytics-8.3.221",
+      "preprocessingVersion": "rgb-resize-short224-bilinear-centercrop224-tensor01-v1",
+      "scanSha256": "3889a50889d268d5e99fa9d41a4ae46110c220c3d7f1c9619c657bdd86358552"
+    },
+    {
+      "width": 320,
+      "height": 240,
+      "channels": 1,
+      "predictedClass": "normal",
+      "rawScore": 0.8695434331893921,
+      "scores": [
+        0.013268604874610901,
+        0.1171879693865776,
+        0.8695434331893921
+      ],
+      "modelSha256": "200f5ab52415cb96dae577a45b5d1cb8a6dedb2cbab03c32885d826553d0d595",
+      "modelVersion": "medstroke-checkpoint-2025-10-27-ultralytics-8.3.221",
+      "preprocessingVersion": "rgb-resize-short224-bilinear-centercrop224-tensor01-v1",
+      "scanSha256": "5b439a18b1e4066fdce244f7c154de9b6ccf4cc86376f0abc98db279c3d921f2"
+    },
+    {
+      "width": 320,
+      "height": 240,
+      "channels": 3,
+      "predictedClass": "ischemia",
+      "rawScore": 1.0,
+      "scores": [
+        6.17092729344475e-26,
+        1.0,
+        0.0
+      ],
+      "modelSha256": "200f5ab52415cb96dae577a45b5d1cb8a6dedb2cbab03c32885d826553d0d595",
+      "modelVersion": "medstroke-checkpoint-2025-10-27-ultralytics-8.3.221",
+      "preprocessingVersion": "rgb-resize-short224-bilinear-centercrop224-tensor01-v1",
+      "scanSha256": "d689fe0ca8ed104e80ffd801dcea68e76ebba86aac4fe61bdffffe1409636884"
+    },
+    {
+      "width": 512,
+      "height": 512,
+      "channels": 1,
+      "predictedClass": "ischemia",
+      "rawScore": 0.5647609233856201,
+      "scores": [
+        0.0007814825512468815,
+        0.5647609233856201,
+        0.43445757031440735
+      ],
+      "modelSha256": "200f5ab52415cb96dae577a45b5d1cb8a6dedb2cbab03c32885d826553d0d595",
+      "modelVersion": "medstroke-checkpoint-2025-10-27-ultralytics-8.3.221",
+      "preprocessingVersion": "rgb-resize-short224-bilinear-centercrop224-tensor01-v1",
+      "scanSha256": "b15d7ebf7789213071b1e550a5317abd4916d815886999fee2decfdce3867444"
+    },
+    {
+      "width": 512,
+      "height": 512,
+      "channels": 3,
+      "predictedClass": "ischemia",
+      "rawScore": 1.0,
+      "scores": [
+        1.343806183487149e-29,
+        1.0,
+        0.0
+      ],
+      "modelSha256": "200f5ab52415cb96dae577a45b5d1cb8a6dedb2cbab03c32885d826553d0d595",
+      "modelVersion": "medstroke-checkpoint-2025-10-27-ultralytics-8.3.221",
+      "preprocessingVersion": "rgb-resize-short224-bilinear-centercrop224-tensor01-v1",
+      "scanSha256": "1e5df66a94abd911f2d73a8cac0936ea3832b4dab31bb52d62f99ea599a8075e"
+    },
+    {
+      "width": 1024,
+      "height": 256,
+      "channels": 1,
+      "predictedClass": "normal",
+      "rawScore": 0.8787834048271179,
+      "scores": [
+        0.010438299737870693,
+        0.11077827960252762,
+        0.8787834048271179
+      ],
+      "modelSha256": "200f5ab52415cb96dae577a45b5d1cb8a6dedb2cbab03c32885d826553d0d595",
+      "modelVersion": "medstroke-checkpoint-2025-10-27-ultralytics-8.3.221",
+      "preprocessingVersion": "rgb-resize-short224-bilinear-centercrop224-tensor01-v1",
+      "scanSha256": "78bb64c69671ffbe12133fe636f89dfec6cfababd61b71567a24f89a4af1f1cf"
+    },
+    {
+      "width": 1024,
+      "height": 256,
+      "channels": 3,
+      "predictedClass": "ischemia",
+      "rawScore": 1.0,
+      "scores": [
+        9.424084433764041e-27,
+        1.0,
+        0.0
+      ],
+      "modelSha256": "200f5ab52415cb96dae577a45b5d1cb8a6dedb2cbab03c32885d826553d0d595",
+      "modelVersion": "medstroke-checkpoint-2025-10-27-ultralytics-8.3.221",
+      "preprocessingVersion": "rgb-resize-short224-bilinear-centercrop224-tensor01-v1",
+      "scanSha256": "e2870f9639b790b2869829abf5ac3b56dc1a87517a7cc080233d3659c489e0b2"
+    }
+  ],
+  "baselineImageId": "sha256:3b92b06719d109469ec6422c5c3af6a84512317af73ca3aa45e96da8c4e16d4e",
+  "candidateImageId": "sha256:110c4b2a5dbad5d0ba57ea13bdc973a3190243f83e83629156886cda840a3bc6"
+}

@@ -3,4 +3,4 @@ torch==2.10.0+cpu
 torchvision==0.25.0+cpu
 ultralytics==8.3.221
 numpy==2.2.6
-pillow==11.3.0
+pillow==13.0.0

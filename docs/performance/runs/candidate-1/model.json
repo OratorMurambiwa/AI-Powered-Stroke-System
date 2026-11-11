@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 1,
+  "syntheticOnly": true,
+  "python": "3.12.11",
+  "workload": "30 sequential jobs, 3 generated 64x64 patterns, 2 excluded warmups",
+  "startupAndFirstJobMs": 19896.9269139925,
+  "elapsedSeconds": 5.937596315983683,
+  "roundTrip": {
+    "n": 30,
+    "p50Ms": 177.92572500184178,
+    "p95Ms": 308.070041006431,
+    "minMs": 137.50183998490684,
+    "maxMs": 391.1047829897143,
+    "completedPerSecond": 5.052549618309627
+  },
+  "workerJob": {
+    "n": 30,
+    "p50Ms": 142.306,
+    "p95Ms": 250.436,
+    "minMs": 112.599,
+    "maxMs": 330.871
+  },
+  "memoryBefore": {
+    "currentBytes": 15810560,
+    "peakBytes": 17227776
+  },
+  "memoryAfter": {
+    "currentBytes": 258228224,
+    "peakBytes": 276545536
+  },
+  "sampledPeakBytes": 276021248,
+  "memorySampleIntervalMs": 10,
+  "samples": [
+    {
+      "pattern": "black",
+      "roundTripMs": 242.16061798506416,
+      "workerJobMs": 189.205
+    },
+    {
+      "pattern": "white",
+      "roundTripMs": 236.37373000383377,
+      "workerJobMs": 194.898
+    },
+    {
+      "pattern": "gradient",
+      "roundTripMs": 198.71023399173282,
+      "workerJobMs": 159.293
+    },
+    {
+      "pattern": "black",
+      "roundTripMs": 242.38100499496795,
+      "workerJobMs": 199.798
+    },
+    {
+      "pattern": "white",
+      "roundTripMs": 215.84011599770747,
+      "workerJobMs": 169.126
+    },
+    {
+      "pattern": "gradient",
+      "roundTripMs": 177.92572500184178,
+      "workerJobMs": 142.306
+    },
+    {
+      "pattern": "black",
+      "roundTripMs": 183.5485440096818,
+      "workerJobMs": 149.789
+    },
+    {
+      "pattern": "white",
+      "roundTripMs": 149.17097499710508,
+      "workerJobMs": 121.953
+    },
+    {
+      "pattern": "gradient",
+      "roundTripMs": 137.50183998490684,
+      "workerJobMs": 112.599
+    },
+    {
+      "pattern": "black",
+      "roundTripMs": 248.89347900170833,
+      "workerJobMs": 222.473
+    },
+    {
+      "pattern": "white",
+      "roundTripMs": 151.6093649843242,
+      "workerJobMs": 126.19
+    },
+    {
+      "pattern": "gradient",
+      "roundTripMs": 162.12456999346614,
+      "workerJobMs": 137.915
+    },
+    {
+      "pattern": "black",
+      "roundTripMs": 191.86394402640872,
+      "workerJobMs": 148.939
+    },
+    {
+      "pattern": "white",
+      "roundTripMs": 308.070041006431,
+      "workerJobMs": 250.436
+    },
+    {
+      "pattern": "gradient",
+      "roundTripMs": 149.5254139881581,
+      "workerJobMs": 121.925
+    },
+    {
+      "pattern": "black",
+      "roundTripMs": 160.99319799104705,
+      "workerJobMs": 138.004
+    },
+    {
+      "pattern": "white",
+      "roundTripMs": 158.48231900599785,
+      "workerJobMs": 127.282
+    },
+    {
+      "pattern": "gradient",
+      "roundTripMs": 191.55876099830493,
+      "workerJobMs": 164.034
+    },
+    {
+      "pattern": "black",
+      "roundTripMs": 160.8188470127061,
+      "workerJobMs": 131.635
+    },
+    {
+      "pattern": "white",
+      "roundTripMs": 150.36500300629996,
+      "workerJobMs": 128.114
+    },
+    {
+      "pattern": "gradient",
+      "roundTripMs": 154.09506202558987,
+      "workerJobMs": 128.57
+    },
+    {
+      "pattern": "black",
+      "roundTripMs": 157.51573999295942,
+      "workerJobMs": 133.441
+    },
+    {
+      "pattern": "white",
+      "roundTripMs": 153.83887899224646,
+      "workerJobMs": 126.169
+    },
+    {
+      "pattern": "gradient",
+      "roundTripMs": 166.55469499528408,
+      "workerJobMs": 140.025
+    },
+    {
+      "pattern": "black",
+      "roundTripMs": 156.38072998262942,
+      "workerJobMs": 127.195
+    },
+    {
+      "pattern": "white",
+      "roundTripMs": 196.57867201021872,
+      "workerJobMs": 164.173
+    },
+    {
+      "pattern": "gradient",
+      "roundTripMs": 248.2073709834367,
+      "workerJobMs": 202.413
+    },
+    {
+      "pattern": "black",
+      "roundTripMs": 391.1047829897143,
+      "workerJobMs": 330.871
+    },
+    {
+      "pattern": "white",
+      "roundTripMs": 267.7294710010756,
+      "workerJobMs": 207.773
+    },
+    {
+      "pattern": "gradient",
+      "roundTripMs": 196.7231259914115,
+      "workerJobMs": 157.325
+    }
+  ],
+  "outputs": {
+    "black": {
+      "predictedClass": "bleeding",
+      "rawScore": 0.39370256662368774,
+      "scores": [
+        0.39370256662368774,
+        0.21847689151763916,
+        0.3878205716609955
+      ],
+      "modelSha256": "200f5ab52415cb96dae577a45b5d1cb8a6dedb2cbab03c32885d826553d0d595",
+      "modelVersion": "medstroke-checkpoint-2025-10-27-ultralytics-8.3.221",
+      "preprocessingVersion": "rgb-resize-short224-bilinear-centercrop224-tensor01-v1",
+      "scanSha256": "7373d93c0cc4bf540ee0e6279ba16a8694eb8bffd10a83bcbaaaf02af9dc7716"
+    },
+    "white": {
+      "predictedClass": "normal",
+      "rawScore": 0.3774694502353668,
+      "scores": [
+        0.35497260093688965,
+        0.2675579786300659,
+        0.3774694502353668
+      ],
+      "modelSha256": "200f5ab52415cb96dae577a45b5d1cb8a6dedb2cbab03c32885d826553d0d595",
+      "modelVersion": "medstroke-checkpoint-2025-10-27-ultralytics-8.3.221",
+      "preprocessingVersion": "rgb-resize-short224-bilinear-centercrop224-tensor01-v1",
+      "scanSha256": "33d2f0b4ec6d816bac3dc277484f9f1836252314fb4cae4f6434cf8188efd51b"
+    },
+    "gradient": {
+      "predictedClass": "normal",
+      "rawScore": 0.46912384033203125,
+      "scores": [
+        0.28636088967323303,
+        0.2445152848958969,
+        0.46912384033203125
+      ],
+      "modelSha256": "200f5ab52415cb96dae577a45b5d1cb8a6dedb2cbab03c32885d826553d0d595",
+      "modelVersion": "medstroke-checkpoint-2025-10-27-ultralytics-8.3.221",
+      "preprocessingVersion": "rgb-resize-short224-bilinear-centercrop224-tensor01-v1",
+      "scanSha256": "e7a32d6b79ac63953cd7da2c6b2da95a3e27fff38bbc130aa2c4603b0896bbf7"
+    }
+  }
+}

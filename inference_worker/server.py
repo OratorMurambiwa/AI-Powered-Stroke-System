@@ -9,6 +9,7 @@ import struct
 import subprocess
 import sys
 import threading
+import time
 import zlib
 import binascii
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -38,13 +39,27 @@ def close_pool():
         _pool=None
 
 def _line(process,timeout):
+    """Bound the complete message, including stalled partial lines; retain coalesced replies."""
     import selectors
+    deadline=time.monotonic()+timeout
+    pending=getattr(process,'_stroke_buffer',b'')
     with selectors.DefaultSelector() as selector:
         selector.register(process.stdout,selectors.EVENT_READ)
-        if not selector.select(timeout):raise RuntimeError('inference_deadline')
-    raw=process.stdout.readline(8193)
-    if not raw or len(raw)>8192:raise RuntimeError('inference_failed')
-    return json.loads(raw)
+        while True:
+            end=pending.find(b'\n')
+            if end>=0:
+                if end>8191:raise RuntimeError('inference_failed')
+                process._stroke_buffer=pending[end+1:]
+                return json.loads(pending[:end])
+            if len(pending)>=8192:raise RuntimeError('inference_failed')
+            remaining=deadline-time.monotonic()
+            if remaining<=0 or not selector.select(remaining):raise RuntimeError('inference_deadline')
+            block=os.read(process.stdout.fileno(),8192-len(pending))
+            if not block:raise RuntimeError('inference_failed')
+            pending+=block
+
+def pool_ready():
+    return _pool is not None and not _pool_broken and _pool.poll() is None
 
 def run_job(command, timeout=20):
     global _pool,_pool_child,_pool_broken
@@ -115,7 +130,8 @@ def main():
             self.end_headers(); self.wfile.write(raw)
         def do_GET(self):
             if self.path=='/health':
-                self.reply(200,{'schemaVersion':1,'modelSha256':MODEL_SHA256,'ready':True})
+                ready=pool_ready()
+                self.reply(200 if ready else 503,{'schemaVersion':1,'modelSha256':MODEL_SHA256,'ready':ready})
             else:
                 self.reply(404,{'error':'not_found'})
         def do_POST(self):

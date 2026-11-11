@@ -83,6 +83,24 @@ class PredictionIntegration(WorkflowFixture,unittest.TestCase):
         target='/api/v1/clinical/encounters/'+self.encounters[1]+'/predictions'
         self.assertEqual(self.clinical_post(target,self.intent(),'doctor')[0],404)
 
+    def test_worker_connection_failure_is_durable_and_same_request_recovers(self):
+        import socket
+        command=self.intent();live=self.service.inference
+        # A privately bound but non-listening socket reserves a genuinely unreachable
+        # endpoint inside this disposable test container; no transport is mocked.
+        with socket.socket() as unavailable:
+            unavailable.bind(('127.0.0.1',0))
+            self.service.inference=InferenceAdapter(f'http://127.0.0.1:{unavailable.getsockname()[1]}/api/v1/predict',os.environ['INFERENCE_SERVICE_KEY'])
+            try:
+                self.assertEqual(self.infer(command)[0],503)
+                failed=self.read()[1]['predictions'][0]
+                self.assertEqual(failed['state'],'FAILED');self.assertIsNone(failed['prediction'])
+            finally:self.service.inference=live
+        recovered=self.success(command)
+        self.assertEqual(recovered['attempts'],2)
+        self.assertEqual(self.infer(command),(200,recovered))
+        self.assertEqual(self.request(self.base+'/assessment','doctor')[1]['version'],1)
+
     def test_concurrent_identical_requests_and_retries_have_one_prediction(self):
         command=self.intent()
         with ThreadPoolExecutor(max_workers=3) as executor:

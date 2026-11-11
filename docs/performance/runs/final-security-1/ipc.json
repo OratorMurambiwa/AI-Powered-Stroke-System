@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "lines": 200,
+  "bytesPerLine": 1015,
+  "elapsedSeconds": 0.08841478399699554,
+  "lineRead": {
+    "n": 200,
+    "p50Ms": 0.03267201827839017,
+    "p95Ms": 0.1366209762636572,
+    "minMs": 0.02190598752349615,
+    "maxMs": 62.75415598065592
+  },
+  "partialLineDeadline": {
+    "bounded": false,
+    "watchdogSeconds": 1
+  }
+}

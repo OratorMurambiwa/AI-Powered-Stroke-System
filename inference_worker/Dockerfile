@@ -6,7 +6,7 @@ COPY inference_worker/requirements.lock /tmp/requirements.lock
 RUN pip install --no-cache-dir -r /tmp/requirements.txt -c /tmp/requirements.lock
 WORKDIR /app
 COPY inference_worker/child.py inference_worker/model.py inference_worker/probe.py inference_worker/server.py inference_worker/pool.py /app/inference_worker/
-COPY inference_worker/tests/test_worker.py /app/inference_worker/tests/
+COPY inference_worker/tests/test_worker.py inference_worker/tests/test_ipc.py inference_worker/tests/test_transport.py /app/inference_worker/tests/
 COPY inference_worker/README.md /app/inference_worker/
 COPY clinical_api/png.py clinical_api/errors.py /app/clinical_api/
 ENV YOLO_OFFLINE=true

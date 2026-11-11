@@ -12,6 +12,8 @@ inference_worker/**
 !inference_worker/tests/
 inference_worker/tests/**
 !inference_worker/tests/test_worker.py
+!inference_worker/tests/test_ipc.py
+!inference_worker/tests/test_transport.py
 !clinical_api/
 clinical_api/**
 !clinical_api/png.py

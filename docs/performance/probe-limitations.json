@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "inconclusivePartialLineProbe": [
+    "final-security-1"
+  ],
+  "reason": "v1 outer watchdog included interpreter import/startup, so its timeout cannot locate the fault. Keep raw model/IPC timings; exclude this ambiguous partial-line result. V2 starts its watchdog only after explicit readiness.",
+  "v1HarnessSha256": "253e8be62a86fcc57c84aa1f7dac0fef82d4a71d3c953ec3f4eead079ebf1af9",
+  "v1PreservedAt": "benchmarks/ipc_v1.py",
+  "replacementProbe": "docs/performance/ipc-v2/"
+}

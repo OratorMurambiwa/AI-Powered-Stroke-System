@@ -25,3 +25,7 @@ docker run --rm --network none --read-only --tmpfs /tmp:rw,size=64m \
 ```
 
 The output is uncalibrated model scores on nonmedical synthetic patterns, not diagnoses or a clinical accuracy evaluation. Every result remains experimental and subject to independent clinician review; review never approves a diagnosis or exposes these records to patients.
+
+Milestone 6 bounds the complete supervisor reply read, including partial lines, and checks live supervisor state in `/health` (503/ready:false after failure). Restart explicitly after supervisor failure; it must pass the real startup inference again. Fixed-limit baseline/candidate benchmarks and real worker fault tests are documented in [performance methodology](../docs/performance/README.md); transport savings are not a demonstrated neural-inference speedup.
+
+The Milestone 6 security update pins Pillow 13.0.0 using an actual isolated `pip freeze` after `pip check`; all other worker dependencies and model weights are unchanged. Exact generated-image prediction parity and the full regression suite gate this decoder update; this does not establish medical accuracy. See the [dependency findings and limits](../docs/hospital-milestone-6-verification.md).

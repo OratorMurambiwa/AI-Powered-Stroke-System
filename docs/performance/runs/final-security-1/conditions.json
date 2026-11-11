@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "af6fbf7ca5cf9fbfaefa0320d178f5a73a1ca20d",
+  "imageId": "sha256:110c4b2a5dbad5d0ba57ea13bdc973a3190243f83e83629156886cda840a3bc6",
+  "runtimeSourceSha256": {
+    "inference_worker/server.py": "9c8a4b6cb2294e286f2204d5a237d4c1babf9f25c18153f1772ceea77594dca4",
+    "inference_worker/pool.py": "64bd2fda7f05c020709cecd9eb79848c0a06b6efe3bb8e80a5eccd9ea9eb4f08",
+    "inference_worker/model.py": "a628e95414721c5c9f35e8bca3f93559de8c6206fd91cb28387fca6c46ad833c"
+  },
+  "harnessSha256": {
+    "benchmarks/model.py": "fd8a3a3e48cdb10ee83d69bcbc9f169a139e4f25c6c8fc2b56eefffde3cd2783",
+    "benchmarks/ipc.py": "253e8be62a86fcc57c84aa1f7dac0fef82d4a71d3c953ec3f4eead079ebf1af9"
+  },
+  "hardware": {
+    "NCPU": 14,
+    "MemTotal": 7751802880,
+    "KernelVersion": "6.6.87.2-microsoft-standard-WSL2",
+    "OSType": "linux",
+    "Architecture": "x86_64",
+    "ServerVersion": "29.9.2",
+    "cpuModel": "Intel(R) Core(TM) Ultra 5 225U"
+  },
+  "limits": {
+    "cpus": 2,
+    "memoryBytes": 1572864000,
+    "pids": 64,
+    "tmpfsBytes": 67108864,
+    "network": "none",
+    "torchThreads": 2
+  },
+  "runtimeVersions": {
+    "python": "3.12.11",
+    "pillow": "13.0.0",
+    "torch": "2.10.0+cpu",
+    "torchvision": "0.25.0+cpu"
+  },
+  "completedAtUtc": "2026-11-11T01:33:12.035955+00:00",
+  "complete": true
+}

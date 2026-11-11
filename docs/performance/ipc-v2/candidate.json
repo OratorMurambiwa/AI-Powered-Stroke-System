@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "lines": 200,
+  "bytesPerLine": 1015,
+  "elapsedSeconds": 0.1311196379829198,
+  "lineRead": {
+    "n": 200,
+    "p50Ms": 0.06282899994403124,
+    "p95Ms": 0.2646670036483556,
+    "minMs": 0.022326014004647732,
+    "maxMs": 74.40066197887063
+  },
+  "partialLineDeadline": {
+    "bounded": true,
+    "watchdogStartsAfterReadiness": true,
+    "elapsedSeconds": 0.0507117249944713,
+    "code": "inference_deadline"
+  }
+}
